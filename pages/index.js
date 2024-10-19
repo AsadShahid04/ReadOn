@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Box,
   Heading,
@@ -10,16 +8,8 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 
-const FeatureButton = ({
-  href,
-  title,
-  description,
-}: {
-  href: string;
-  title: string;
-  description: string;
-}) => (
-  <Link href={href} passHref legacyBehavior>
+const FeatureButton = ({ href, title, description }) => (
+  <Link href={href} passHref>
     <Button
       as="a"
       height="auto"
