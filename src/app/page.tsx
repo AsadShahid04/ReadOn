@@ -101,9 +101,9 @@ export default function Home() {
                     userText={userText}
                   />
                   <FeatureButton
-                    href="/interactive"
-                    title="Interactive Learning"
-                    description="Visualize words and practice pronunciation"
+                    href="/visualization"
+                    title="Word Visualization"
+                    description="Visualize words and their relationships"
                     userText={userText}
                   />
                   <FeatureButton
