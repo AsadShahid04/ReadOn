@@ -7,7 +7,6 @@ import {
   Text,
   VStack,
   Button,
-  SimpleGrid,
   Textarea,
   useColorModeValue,
   Container,
@@ -22,8 +21,12 @@ interface FeatureButtonProps {
   description: string;
 }
 
-const FeatureButton: React.FC<FeatureButtonProps> = ({ href, title, description }) => (
-  <Link href={href} passHref>
+const FeatureButton: React.FC<FeatureButtonProps> = ({
+  href,
+  title,
+  description,
+}) => (
+  <Link href={href} passHref style={{ width: "100%" }}>
     <Button
       as="a"
       height="auto"
@@ -32,11 +35,13 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({ href, title, description 
       variant="outline"
       width="100%"
     >
-      <VStack align="start" spacing={2}>
-        <Text fontSize="xl" fontWeight="bold">
+      <VStack align="center" spacing={2} width="100%">
+        <Text fontSize="xl" fontWeight="bold" textAlign="center">
           {title}
         </Text>
-        <Text fontSize="sm">{description}</Text>
+        <Text fontSize="sm" textAlign="center">
+          {description}
+        </Text>
       </VStack>
     </Button>
   </Link>
@@ -64,12 +69,16 @@ export default function Home() {
       <Container maxW="container.xl">
         <VStack spacing={12} align="stretch">
           <Fade in={true}>
-            <VStack spacing={4}>
+            <VStack spacing={6}>
               <Heading as="h1" size="2xl" textAlign="center">
                 Read On
               </Heading>
-              <Text fontSize="xl" textAlign="center">
-                Your AI Reading Companion
+              <Text fontSize="xl" textAlign="center" maxWidth="800px" mx="auto">
+                Your AI-powered reading companion designed to enhance
+                comprehension, improve phonics skills, and visualize text
+                relationships. Utilizing advanced AI technology, Read On offers
+                personalized learning experiences to boost your reading
+                proficiency across various domains.
               </Text>
             </VStack>
           </Fade>
@@ -93,32 +102,27 @@ export default function Home() {
             </VStack>
           ) : (
             <Fade in={true}>
-              <VStack spacing={8}>
+              <VStack spacing={8} width="100%" align="stretch">
                 <Text fontSize="lg" fontWeight="medium" textAlign="center">
-                  Click One of the Options Below to Get Started
+                  Choose an Option Below to Begin Your Reading Journey
                 </Text>
-                <SimpleGrid columns={[1, null, 2]} spacing={8}>
+                <VStack spacing={4} width="100%" maxWidth="600px" mx="auto">
                   <FeatureButton
                     href="/phonics"
-                    title="Phonics and Compound Words"
-                    description="Learn and practice phonics with interactive exercises"
+                    title="Phonics Practice"
+                    description="Enhance phonetic awareness and word-building skills"
                   />
                   <FeatureButton
                     href="/comprehension"
                     title="Reading Comprehension"
-                    description="Improve your understanding with text analysis tools"
+                    description="Analyze texts and improve understanding of written content"
                   />
                   <FeatureButton
                     href="/visualization"
                     title="Word Visualization"
-                    description="Visualize words and their relationships"
+                    description="Explore visual representations of words and their relationships"
                   />
-                  <FeatureButton
-                    href="/assessment"
-                    title="Assessment Tools"
-                    description="Test your knowledge and get personalized feedback"
-                  />
-                </SimpleGrid>
+                </VStack>
               </VStack>
             </Fade>
           )}
