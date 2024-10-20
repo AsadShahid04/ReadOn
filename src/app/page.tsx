@@ -14,9 +14,10 @@ import {
   Fade,
 } from "@chakra-ui/react";
 import Link from "next/link";
+import { useText } from "./TextContext"; // Corrected import path
 
-const FeatureButton = ({ href, title, description, userText }) => (
-  <Link href={{ pathname: href, query: { text: userText } }} passHref legacyBehavior>
+const FeatureButton = ({ href, title, description }) => (
+  <Link href={href} passHref>
     <Button
       as="a"
       height="auto"
@@ -24,8 +25,6 @@ const FeatureButton = ({ href, title, description, userText }) => (
       colorScheme="blue"
       variant="outline"
       width="100%"
-      transition="all 0.3s"
-      _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
     >
       <VStack align="start" spacing={2}>
         <Text fontSize="xl" fontWeight="bold">
@@ -38,15 +37,19 @@ const FeatureButton = ({ href, title, description, userText }) => (
 );
 
 export default function Home() {
-  const [userText, setUserText] = useState("");
+  const { inputText, setInputText } = useText(); // Access inputText and setInputText
   const [isSubmitted, setIsSubmitted] = useState(false);
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
 
   const handleSubmit = () => {
-    if (userText.trim()) {
+    if (inputText.trim()) {
       setIsSubmitted(true);
     }
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(event.target.value); // Update the inputText state
   };
 
   return (
@@ -72,8 +75,8 @@ export default function Home() {
               <Textarea
                 placeholder="Type or paste your text here..."
                 size="lg"
-                value={userText}
-                onChange={(e) => setUserText(e.target.value)}
+                value={inputText}
+                onChange={handleInputChange}
                 bg={useColorModeValue("white", "gray.700")}
                 minHeight="200px"
               />
@@ -92,25 +95,21 @@ export default function Home() {
                     href="/phonics"
                     title="Phonics and Compound Words"
                     description="Learn and practice phonics with interactive exercises"
-                    userText={userText}
                   />
                   <FeatureButton
                     href="/comprehension"
                     title="Reading Comprehension"
                     description="Improve your understanding with text analysis tools"
-                    userText={userText}
                   />
                   <FeatureButton
                     href="/visualization"
                     title="Word Visualization"
                     description="Visualize words and their relationships"
-                    userText={userText}
                   />
                   <FeatureButton
                     href="/assessment"
                     title="Assessment Tools"
                     description="Test your knowledge and get personalized feedback"
-                    userText={userText}
                   />
                 </SimpleGrid>
               </VStack>
