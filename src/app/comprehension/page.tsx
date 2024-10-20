@@ -7,10 +7,21 @@ import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
+interface Choice {
+  text: string;
+  isCorrect: boolean;
+}
+
+interface Question {
+  question: string;
+  choices: Choice[];
+}
+
 const ReadingComprehension = () => {
   const { inputText } = useText();
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number | null }>({});
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -26,7 +37,7 @@ const ReadingComprehension = () => {
           });
 
           const data = await response.json();
-          console.log("API Response:", data); // Log the entire response
+          console.log("API Response:", data);
 
           if (data.questions && Array.isArray(data.questions)) {
             setQuestions(data.questions);
@@ -49,12 +60,25 @@ const ReadingComprehension = () => {
     fetchQuestions();
   }, [inputText]);
 
-  const handleAnswerSubmit = (isCorrect: boolean) => {
+  const handleAnswerSubmit = (questionIndex: number, choiceIndex: number, isCorrect: boolean) => {
+    setSelectedAnswers(prev => ({ ...prev, [questionIndex]: choiceIndex }));
     if (isCorrect) {
       toast.success("Correct answer!");
     } else {
       toast.error("Incorrect answer. Try again!");
     }
+
+    // Clear the selection after 1.5 seconds
+    setTimeout(() => {
+      setSelectedAnswers(prev => ({ ...prev, [questionIndex]: null }));
+    }, 1500);
+  };
+
+  const getButtonColor = (questionIndex: number, choiceIndex: number, isCorrect: boolean) => {
+    if (selectedAnswers[questionIndex] === choiceIndex) {
+      return isCorrect ? "green" : "red";
+    }
+    return "blue";
   };
 
   return (
@@ -71,18 +95,18 @@ const ReadingComprehension = () => {
           {loading ? (
             <Text>Loading questions...</Text>
           ) : questions.length > 0 ? (
-            questions.map((question, index) => (
-              <Box key={index} mb={8} p={4} borderWidth={1} borderRadius="md">
+            questions.map((question, questionIndex) => (
+              <Box key={questionIndex} mb={8} p={4} borderWidth={1} borderRadius="md">
                 <Text fontSize="lg" fontWeight="bold" mb={4}>
                   {question.question}
                 </Text>
                 <VStack spacing={3} align="stretch">
-                  {question.choices.map((choice: any, choiceIndex: number) => (
+                  {question.choices.map((choice, choiceIndex) => (
                     <Button
                       key={choiceIndex}
-                      onClick={() => handleAnswerSubmit(choice.isCorrect)}
-                      colorScheme="blue"
-                      variant="outline"
+                      onClick={() => handleAnswerSubmit(questionIndex, choiceIndex, choice.isCorrect)}
+                      colorScheme={getButtonColor(questionIndex, choiceIndex, choice.isCorrect)}
+                      variant={selectedAnswers[questionIndex] === choiceIndex ? "solid" : "outline"}
                       justifyContent="flex-start"
                       height="auto"
                       whiteSpace="normal"
