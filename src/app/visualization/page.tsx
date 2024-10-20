@@ -1,8 +1,9 @@
 'use client'
 
-import { Box, Heading, Text, VStack, Image, Spinner } from '@chakra-ui/react'
-import { useSearchParams } from 'next/navigation'
+import { Box, Heading, Text, VStack, Image, Spinner, Button } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
+import { useText } from '../TextContext'  // Import the useText hook
+import Link from 'next/link'
 
 interface VisualizationResult {
   sentence: string;
@@ -10,19 +11,16 @@ interface VisualizationResult {
 }
 
 const WordVisualization = () => {
-  const [inputText, setInputText] = useState('')
+  const { inputText } = useText()  // Use the useText hook to get the inputText
   const [results, setResults] = useState<VisualizationResult[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    const text = searchParams.get('text')
-    if (text) {
-      setInputText(text)
-      generateImages(text)
+    if (inputText) {
+      generateImages(inputText)
     }
-  }, [searchParams])
+  }, [inputText])  // Run this effect when inputText changes
 
   const generateImages = async (text: string) => {
     setLoading(true)
@@ -70,6 +68,11 @@ const WordVisualization = () => {
         ) : (
           <Text textAlign="center">No results generated. Please try again.</Text>
         )}
+        <Link href="/" passHref>
+          <Button as="a" colorScheme="blue">
+            Back to Home
+          </Button>
+        </Link>
       </VStack>
     </Box>
   )
