@@ -14,7 +14,7 @@ import {
   Fade,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import { useText } from "./TextContext"; // Corrected import path
+import { useText } from "./TextContext";
 
 interface FeatureButtonProps {
   href: string;
@@ -43,10 +43,11 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({ href, title, description 
 );
 
 export default function Home() {
-  const { inputText, setInputText } = useText(); // Access inputText and setInputText
+  const { inputText, setInputText } = useText();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
+  const textareaBg = useColorModeValue("white", "gray.700");
 
   const handleSubmit = () => {
     if (inputText.trim()) {
@@ -83,7 +84,7 @@ export default function Home() {
                 size="lg"
                 value={inputText}
                 onChange={handleInputChange}
-                bg={useColorModeValue("white", "gray.700")}
+                bg={textareaBg}
                 minHeight="200px"
               />
               <Button colorScheme="blue" size="lg" onClick={handleSubmit}>
