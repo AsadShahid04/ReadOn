@@ -27,7 +27,10 @@ def generate_images(text):
     for i, sentence in enumerate(sentences):
         try:
             if i == 0:
-                prompt = sentence
+                prompt = f"""
+                    Starting Sentence: {sentence}
+                    Generate an image that best represents the starting sentence.
+                """
             else:
                 prompt = f"""Context: {context}
                     Current sentence: {sentence}
