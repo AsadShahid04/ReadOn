@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server'
 import { spawn } from 'child_process'
 import path from 'path'
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   const { text } = await request.json()
 
-  return new Promise((resolve) => {
+  return new Promise<Response>((resolve) => {
     const process = spawn('python', [
       path.join('src', 'app', 'visualization', 'generate_images.py'),
     ])

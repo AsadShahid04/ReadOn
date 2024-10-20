@@ -2,9 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  experimental: {
-    serverComponentsExternalPackages: ['child_process'],
-  },
+  // Remove the experimental.appDir option as it's no longer needed in Next.js 14
 }
 
 module.exports = nextConfig
