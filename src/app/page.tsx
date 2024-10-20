@@ -16,7 +16,13 @@ import {
 import Link from "next/link";
 import { useText } from "./TextContext"; // Corrected import path
 
-const FeatureButton = ({ href, title, description }) => (
+interface FeatureButtonProps {
+  href: string;
+  title: string;
+  description: string;
+}
+
+const FeatureButton: React.FC<FeatureButtonProps> = ({ href, title, description }) => (
   <Link href={href} passHref>
     <Button
       as="a"
@@ -48,8 +54,8 @@ export default function Home() {
     }
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(event.target.value); // Update the inputText state
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(event.target.value);
   };
 
   return (
