@@ -1,0 +1,29 @@
+# OpenAI API
+openai>=1.0.0
+
+# Google Generative AI
+google-generative-ai>=0.3.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Image Processing
+Pillow>=10.0.0
+
+# File Handling
+pathlib>=1.0.1
+
+# Base64 Encoding (included in Python standard library)
+
+# JSON Processing (included in Python standard library)
+
+# System Operations (included in Python standard library)
+
+# Regular Expressions (included in Python standard library)
+
+# Type Hints (included in Python standard library)
+
+# IO Operations (included in Python standard library) 
