@@ -11,6 +11,9 @@ import {
   useColorModeValue,
   Container,
   Fade,
+  Grid,
+  GridItem,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { useText } from "./TextContext";
@@ -26,16 +29,18 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({
   title,
   description,
 }) => (
-  <Link href={href} passHref style={{ width: "100%" }}>
+  <Link href={href} passHref>
     <Button
-      as="a"
+      as="div"
       height="auto"
       p={6}
       colorScheme="blue"
       variant="outline"
       width="100%"
+      minH="150px"
+      cursor="pointer"
     >
-      <VStack align="center" spacing={2} width="100%">
+      <VStack align="center" spacing={2}>
         <Text fontSize="xl" fontWeight="bold" textAlign="center">
           {title}
         </Text>
@@ -49,16 +54,9 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({
 
 export default function Home() {
   const { inputText, setInputText } = useText();
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const textareaBg = useColorModeValue("white", "gray.700");
-
-  const handleSubmit = () => {
-    if (inputText.trim()) {
-      setIsSubmitted(true);
-    }
-  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(event.target.value);
@@ -76,56 +74,56 @@ export default function Home() {
               <Text fontSize="xl" textAlign="center" maxWidth="800px" mx="auto">
                 Your AI-powered reading companion designed to enhance
                 comprehension, improve phonics skills, and visualize text
-                relationships. Utilizing advanced AI technology, Read On offers
-                personalized learning experiences to boost your reading
-                proficiency across various domains.
+                relationships.
               </Text>
             </VStack>
           </Fade>
 
-          {!isSubmitted ? (
-            <VStack spacing={6}>
-              <Text fontSize="lg" fontWeight="medium">
-                Enter Some Text Here to Get Started
-              </Text>
-              <Textarea
-                placeholder="Type or paste your text here..."
-                size="lg"
-                value={inputText}
-                onChange={handleInputChange}
-                bg={textareaBg}
-                minHeight="200px"
+          {/* Text Input Section */}
+          <VStack spacing={6} width="100%">
+            <Text fontSize="lg" fontWeight="medium">
+              Enter Your Text Here
+            </Text>
+            <Textarea
+              placeholder="Type or paste your text here..."
+              size="lg"
+              value={inputText}
+              onChange={handleInputChange}
+              bg={textareaBg}
+              minHeight="200px"
+              resize="vertical"
+              width="100%"
+            />
+          </VStack>
+
+          {/* Features Section in 2x2 Grid */}
+          <VStack spacing={6} width="100%">
+            <Text fontSize="lg" fontWeight="medium">
+              Choose an Option to Begin
+            </Text>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
+              <FeatureButton
+                href="/phonics"
+                title="Phonics Practice"
+                description="Enhance phonetic awareness and word-building skills"
               />
-              <Button colorScheme="blue" size="lg" onClick={handleSubmit}>
-                Submit
-              </Button>
-            </VStack>
-          ) : (
-            <Fade in={true}>
-              <VStack spacing={8} width="100%" align="stretch">
-                <Text fontSize="lg" fontWeight="medium" textAlign="center">
-                  Choose an Option Below to Begin Your Reading Journey
-                </Text>
-                <VStack spacing={4} width="100%" maxWidth="600px" mx="auto">
-                  <FeatureButton
-                    href="/phonics"
-                    title="Phonics Practice"
-                    description="Enhance phonetic awareness and word-building skills"
-                  />
-                  <FeatureButton
-                    href="/comprehension"
-                    title="Reading Comprehension"
-                    description="Analyze texts and improve understanding of written content"
-                  />
-                  <FeatureButton
-                    href="/visualization"
-                    title="Word Visualization"
-                    description="Explore visual representations of words and their relationships"
-                  />
-                </VStack>
-              </VStack>
-            </Fade>
-          )}
+              <FeatureButton
+                href="/comprehension"
+                title="Reading Comprehension"
+                description="Analyze texts and improve understanding of written content"
+              />
+              <FeatureButton
+                href="/visualization"
+                title="Word Visualization"
+                description="Explore visual representations of words and their relationships"
+              />
+              <FeatureButton
+                href="/audiobook"
+                title="Read Aloud"
+                description="Listen to your text being read aloud"
+              />
+            </SimpleGrid>
+          </VStack>
         </VStack>
       </Container>
     </Box>

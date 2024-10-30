@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface TextContextType {
   inputText: string;
@@ -9,20 +9,29 @@ interface TextContextType {
 
 const TextContext = createContext<TextContextType | undefined>(undefined);
 
-export const TextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [inputText, setInputText] = useState('');
+export function TextProvider({ children }: { children: React.ReactNode }) {
+  const [inputText, setInputText] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('inputText') || '';
+    }
+    return '';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('inputText', inputText);
+  }, [inputText]);
 
   return (
     <TextContext.Provider value={{ inputText, setInputText }}>
       {children}
     </TextContext.Provider>
   );
-};
+}
 
-export const useText = () => {
+export function useText() {
   const context = useContext(TextContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useText must be used within a TextProvider');
   }
   return context;
-};
+}

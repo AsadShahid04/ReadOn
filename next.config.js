@@ -2,7 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Remove the experimental.appDir option as it's no longer needed in Next.js 14
   webpack: (config) => {
     config.module.rules.push({
       test: /\.(wav)$/i,
@@ -17,9 +16,12 @@ const nextConfig = {
           },
         },
       ],
-    })
-    return config
+    });
+    return config;
   },
-}
+  experimental: {
+    serverComponentsExternalPackages: ['child_process'],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
