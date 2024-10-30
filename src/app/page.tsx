@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -11,12 +11,13 @@ import {
   useColorModeValue,
   Container,
   Fade,
-  Grid,
-  GridItem,
   SimpleGrid,
+  HStack,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { useText } from "./TextContext";
+
+const CHARACTER_LIMIT = 3500;
 
 interface FeatureButtonProps {
   href: string;
@@ -54,9 +55,17 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({
 
 export default function Home() {
   const { inputText, setInputText } = useText();
+  const [mounted, setMounted] = useState(false);
   const bgColor = useColorModeValue("gray.50", "gray.900");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const textareaBg = useColorModeValue("white", "gray.700");
+  const errorColor = useColorModeValue("red.500", "red.300");
+
+  const isOverLimit = inputText.length > CHARACTER_LIMIT;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(event.target.value);
@@ -80,7 +89,7 @@ export default function Home() {
           </Fade>
 
           {/* Text Input Section */}
-          <VStack spacing={6} width="100%">
+          <VStack spacing={2} width="100%">
             <Text fontSize="lg" fontWeight="medium">
               Enter Your Text Here
             </Text>
@@ -93,7 +102,30 @@ export default function Home() {
               minHeight="200px"
               resize="vertical"
               width="100%"
+              borderColor={isOverLimit ? "red.500" : undefined}
+              _hover={{
+                borderColor: isOverLimit ? "red.600" : undefined,
+              }}
+              _focus={{
+                borderColor: isOverLimit ? "red.700" : undefined,
+                boxShadow: isOverLimit ? `0 0 0 1px ${errorColor}` : undefined,
+              }}
             />
+            {mounted && (
+              <HStack spacing={2} alignSelf="flex-end">
+                <Text
+                  fontSize="sm"
+                  color={isOverLimit ? "red.500" : "gray.500"}
+                >
+                  ({inputText.length}/{CHARACTER_LIMIT} characters)
+                </Text>
+                {isOverLimit && (
+                  <Text fontSize="sm" color="red.500" fontWeight="medium">
+                    You have exceeded the character limit
+                  </Text>
+                )}
+              </HStack>
+            )}
           </VStack>
 
           {/* Features Section in 2x2 Grid */}
