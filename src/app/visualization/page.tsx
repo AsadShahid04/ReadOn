@@ -6,8 +6,9 @@ import { useText } from '../TextContext'  // Import the useText hook
 import Link from 'next/link'
 
 interface VisualizationResult {
-  sentence: string;
+  segment: string;
   image_data: string;
+  segment_type: 'paragraph' | 'sentence';
 }
 
 const WordVisualization = () => {
@@ -26,7 +27,7 @@ const WordVisualization = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/visualization/api', {
+      const response = await fetch('/api/visualization', {  // Updated API route
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,7 +36,7 @@ const WordVisualization = () => {
       })
       const data = await response.json()
       if (response.ok) {
-        setResults(data.results)
+        setResults(data.results)  // Updated to access results from the new response structure
       } else {
         throw new Error(data.error || 'An error occurred')
       }
@@ -49,7 +50,7 @@ const WordVisualization = () => {
   return (
     <Box minHeight="100vh" py={16} px={8}>
       <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="2xl" textAlign="center">Word Visualization</Heading>
+        <Heading as="h1" size="2xl" textAlign="center">Text Visualization</Heading>
         {loading ? (
           <VStack spacing={4}>
             <Spinner size="xl" />
@@ -61,8 +62,10 @@ const WordVisualization = () => {
         ) : results.length > 0 ? (
           results.map((result, index) => (
             <Box key={index} borderWidth={1} borderRadius="lg" p={4}>
-              <Text fontSize="lg" mb={4}><strong>Sentence:</strong> {result.sentence}</Text>
-              <Image src={result.image_data} alt={result.sentence} />
+              <Text fontSize="lg" mb={4}>
+                <strong>{result.segment_type.charAt(0).toUpperCase() + result.segment_type.slice(1)}:</strong> {result.segment}
+              </Text>
+              <Image src={result.image_data} alt={result.segment} />
             </Box>
           ))
         ) : (

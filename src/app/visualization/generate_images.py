@@ -13,29 +13,44 @@ load_dotenv()
 # Initialize the OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+def split_into_paragraphs(text):
+    # Split text into paragraphs based on double newlines or multiple newlines
+    paragraphs = re.split(r'\n\s*\n', text)
+    return [p.strip() for p in paragraphs if p.strip()]
+
 def split_into_sentences(text):
     # This regex splits on '.', '!', and '?' while keeping the punctuation with the sentence
     sentences = re.split(r'(?<=[.!?])\s+', text)
     return [s.strip() for s in sentences if s.strip()]
 
 def generate_images(text):
-    sentences = split_into_sentences(text)
+    # First, try to split into paragraphs
+    paragraphs = split_into_paragraphs(text)
+    
+    # If there's only one paragraph, split it into sentences instead
+    if len(paragraphs) <= 1:
+        segments = split_into_sentences(text)
+        segment_type = "sentence"
+    else:
+        segments = paragraphs
+        segment_type = "paragraph"
 
     results = []
     context = ""
 
-    for i, sentence in enumerate(sentences):
+    for i, segment in enumerate(segments):
         try:
             if i == 0:
                 prompt = f"""
-                    Starting Sentence: {sentence}
-                    Generate an image that best represents the starting sentence.
+                    Starting {segment_type}: {segment}
+                    Generate an image that best represents this {segment_type}.
+                    Create a cohesive visual that captures the main elements and mood.
                 """
             else:
                 prompt = f"""Context: {context}
-                    Current sentence: {sentence}
-                    Generate an image that continues the story, focusing on the current sentence \
-                    but keeping the context in mind. Do not include any text in the image.
+                    Current {segment_type}: {segment}
+                    Generate an image that continues the story, focusing on the current {segment_type} \
+                    while maintaining visual consistency with the context. Do not include any text in the image.
                 """
 
             response = client.images.generate(
@@ -54,17 +69,19 @@ def generate_images(text):
             img_base64 = base64.b64encode(img_data.getvalue()).decode()
 
             results.append({
-                "sentence": sentence,
-                "image_data": f"data:image/png;base64,{img_base64}"
+                "segment": segment,
+                "image_data": f"data:image/png;base64,{img_base64}",
+                "segment_type": segment_type
             })
 
             # Update context
-            context += f" {sentence}"
+            context += f" {segment}"
             # Keep context to a reasonable length
-            context = ' '.join(context.split()[-50:])
+            if len(context.split()) > 200:  # Increased context length for paragraphs
+                context = ' '.join(context.split()[-200:])
 
         except Exception as e:
-            print(f"Error generating image for sentence: {sentence}", file=sys.stderr)
+            print(f"Error generating image for {segment_type}: {segment}", file=sys.stderr)
             print(f"Error: {str(e)}", file=sys.stderr)
 
     return results
