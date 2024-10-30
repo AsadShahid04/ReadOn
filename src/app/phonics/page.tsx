@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Box, Button, VStack, Text, Heading, Flex, Spinner } from '@chakra-ui/react'
+import { useState, useEffect, useRef } from 'react'
+import { Box, Button, VStack, Text, Heading, Flex, Spinner, IconButton } from '@chakra-ui/react'
+import { FaVolumeUp } from 'react-icons/fa'
 import Link from 'next/link'
 import { useText } from '../TextContext'
 
 interface WordData {
   word: string;
-  syllables: string;
+  phonetic: string;
+  audio_url: string | null;
 }
 
 const Phonics = () => {
@@ -15,13 +17,14 @@ const Phonics = () => {
   const [words, setWords] = useState<WordData[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    const fetchSyllablesForWords = async () => {
+    const fetchWordData = async () => {
       if (inputText) {
         setLoading(true)
         try {
-          const response = await fetch('/phonics/api', {
+          const response = await fetch('/api/phonetics', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -29,20 +32,32 @@ const Phonics = () => {
             body: JSON.stringify({ text: inputText }),
           })
           if (!response.ok) {
-            throw new Error('Failed to fetch syllables')
+            throw new Error('Failed to fetch word data')
           }
           const data = await response.json()
           setWords(data)
         } catch (error) {
-          console.error('Error fetching syllables:', error)
+          console.error('Error fetching word data:', error)
         } finally {
           setLoading(false)
         }
       }
     }
 
-    fetchSyllablesForWords()
+    fetchWordData()
   }, [inputText])
+
+  const playAudio = async () => {
+    const currentWord = words[currentIndex]
+    if (currentWord.audio_url && audioRef.current) {
+      audioRef.current.src = currentWord.audio_url
+      try {
+        await audioRef.current.play()
+      } catch (error) {
+        console.error('Error playing audio:', error)
+      }
+    }
+  }
 
   const nextWord = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % words.length)
@@ -64,8 +79,8 @@ const Phonics = () => {
     return (
       <Box minHeight="100vh" py={16} px={8}>
         <VStack spacing={8} align="stretch">
-          <Heading as="h1" size="2xl" textAlign="center">Word Syllables</Heading>
-          <Text textAlign="center">No uncommon words available. Please enter some text with less common words on the home page.</Text>
+          <Heading as="h1" size="2xl" textAlign="center">Word Phonetics</Heading>
+          <Text textAlign="center">No words available. Please enter some text with less common words on the home page.</Text>
           <Link href="/" passHref>
             <Button as="a" colorScheme="blue">Back to Home</Button>
           </Link>
@@ -77,7 +92,7 @@ const Phonics = () => {
   return (
     <Box minHeight="100vh" py={16} px={8}>
       <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="2xl" textAlign="center">Word Syllables</Heading>
+        <Heading as="h1" size="2xl" textAlign="center">Word Phonetics</Heading>
         <Box 
           bg="white" 
           p={12} 
@@ -94,9 +109,20 @@ const Phonics = () => {
                 {words[currentIndex].word}
               </Text>
               <Text fontSize="3xl" textAlign="center" color="gray.600">
-                {words[currentIndex].syllables}
+                {words[currentIndex].phonetic}
               </Text>
+              {words[currentIndex].audio_url && (
+                <IconButton
+                  aria-label="Play pronunciation"
+                  icon={<FaVolumeUp />}
+                  onClick={playAudio}
+                  colorScheme="blue"
+                  size="lg"
+                  isRound
+                />
+              )}
             </VStack>
+            <audio ref={audioRef} />
             <Flex justify="space-between">
               <Button onClick={prevWord} colorScheme="purple" size="lg" fontSize="xl">
                 ← Previous
