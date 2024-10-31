@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Box, Button, VStack, HStack, Text, Heading, Flex, Spinner, IconButton, Container } from '@chakra-ui/react'
+import { Box, Button, VStack, HStack, Text, Heading, Flex, Spinner, IconButton, Container, Fade } from '@chakra-ui/react'
 import { FaVolumeUp, FaArrowLeft, FaArrowRight, FaHome } from 'react-icons/fa'
 import Link from 'next/link'
 import { useText } from '../TextContext'
@@ -83,22 +83,26 @@ const Phonics = () => {
       >
         <Container maxW="container.lg" mt={8}>
           <VStack spacing={8}>
-            <Heading 
-              as="h1" 
-              size="2xl" 
-              textAlign="center"
-              bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
-              bgClip="text"
-              fontWeight="extrabold"
-              letterSpacing="tight"
-              _hover={{
-                bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
-              }}
-              transition="all 0.3s ease"
-              mb={4}
-            >
-              Read On
-            </Heading>
+            <Link href="/" passHref>
+              <Heading 
+                as="h1" 
+                size="2xl" 
+                textAlign="center"
+                bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+                bgClip="text"
+                fontWeight="extrabold"
+                letterSpacing="tight"
+                _hover={{
+                  bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                  cursor: "pointer",
+                  transform: "translateY(-2px)"
+                }}
+                transition="all 0.3s ease"
+                mb={4}
+              >
+                Read On
+              </Heading>
+            </Link>
             <Text 
               fontSize="xl" 
               textAlign="center" 
@@ -236,19 +240,62 @@ const Phonics = () => {
           align="stretch"
           flex="1"
         >
-          <Heading 
-            as="h1" 
-            size="2xl" 
-            textAlign="center"
-            bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
-            bgClip="text"
-            fontWeight="extrabold"
-            letterSpacing="tight"
-            mb={8}
-          >
-            Word Phonetics
-          </Heading>
-          
+          <Fade in={true}>
+            <VStack spacing={8}>
+              <Link href="/" passHref>
+                <Heading 
+                  as="h1" 
+                  size="2xl" 
+                  textAlign="center"
+                  bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+                  bgClip="text"
+                  fontWeight="extrabold"
+                  letterSpacing="tight"
+                  _hover={{
+                    bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                    cursor: "pointer",
+                    transform: "translateY(-2px)"
+                  }}
+                  transition="all 0.3s ease"
+                  mb={4}
+                >
+                  Read On
+                </Heading>
+              </Link>
+              <Text 
+                fontSize="xl" 
+                textAlign="center" 
+                maxWidth="800px" 
+                mx="auto"
+                color="gray.600"
+                lineHeight="tall"
+              >
+                Your AI-Powered Reading Companion
+              </Text>
+              <Heading 
+                as="h2" 
+                size="xl" 
+                textAlign="center"
+                color="blue.600"
+              >
+                Word Phonetics
+              </Heading>
+              <Text 
+                fontSize="lg" 
+                textAlign="center" 
+                color="gray.600"
+                maxW="800px"
+                mx="auto"
+                lineHeight="tall"
+                mb={4}
+              >
+                Practice pronunciation with our interactive flashcards. Each card shows the word and its 
+                phonetic spelling, with an audio button to hear the correct pronunciation. Use the arrows 
+                to navigate through your word list.
+              </Text>
+            </VStack>
+          </Fade>
+
           <Flex 
             align="center" 
             justify="center" 

@@ -8,7 +8,7 @@ def get_base_form(word: str) -> str:
     """Get the base form of a word by removing common suffixes."""
     word = word.lower()
     
-    # Irregular plurals
+    # Irregular plurals - add more as needed
     irregular_plurals = {
         'children': 'child',
         'mice': 'mouse',
@@ -19,68 +19,40 @@ def get_base_form(word: str) -> str:
         'women': 'woman',
         'lives': 'life',
         'leaves': 'leaf',
-        'wolves': 'wolf',
-        'knives': 'knife',
-        'shelves': 'shelf',
-        'selves': 'self',
-        'phenomena': 'phenomenon',
-        'criteria': 'criterion',
-        'data': 'datum',
-        'analyses': 'analysis',
-        'theses': 'thesis',
-        'diagnoses': 'diagnosis',
-        'hypotheses': 'hypothesis',
-        'crises': 'crisis',
-        'matrices': 'matrix',
-        'indices': 'index',
-        'vertices': 'vertex',
-        'appendices': 'appendix'
+        'wolves': 'wolf'
     }
     
     if word in irregular_plurals:
         return irregular_plurals[word]
 
-    # Regular plural rules (in order of specificity)
+    # Regular plural forms
     if word.endswith('ies'):
-        # babies -> baby, but not dies -> die
-        if len(word) > 4:
+        if len(word) > 4:  # To avoid changing words like "dies"
             return word[:-3] + 'y'
-    
     if word.endswith('es'):
-        # matches -> match, boxes -> box
-        if any(word.endswith(suffix) for suffix in ['sses', 'shes', 'ches', 'xes']):
+        if word.endswith('ches') or word.endswith('shes') or word.endswith('sses'):
             return word[:-2]
-        # tomatoes -> tomato
-        if word.endswith('oes') and len(word) > 4:
-            return word[:-2]
-    
-    if word.endswith('s'):
-        # Regular plurals: cats -> cat
-        # But don't change words like 'gas', 'bus', 'kiss'
-        if not any(word.endswith(suffix) for suffix in ['ss', 'us']) and len(word) > 4:
+        if len(word) > 4:  # To avoid changing words like "yes"
+            return word[:-1]
+    if word.endswith('s') and not word.endswith('ss'):
+        if len(word) > 4:  # To avoid changing words like "yes", "bus"
             return word[:-1]
 
-    # Verb forms
+    # Verb forms and participles
     if word.endswith('ing'):
-        # running -> run, but not ring -> r
-        if len(word) > 5:
-            # Double consonant: running -> run
-            if word[-4] == word[-5]:
+        if len(word) > 5:  # To avoid changing words like "ring"
+            if word[-4] == word[-5]:  # Double consonant (running -> run)
                 return word[:-4]
-            # Regular: walking -> walk
             return word[:-3]
-
     if word.endswith('ed'):
-        # walked -> walk, stopped -> stop
-        if len(word) > 4:
-            if word[-3] == word[-4]:
+        if len(word) > 4:  # To avoid changing words like "red"
+            if word[-3] == word[-4]:  # Double consonant (stopped -> stop)
                 return word[:-3]
             return word[:-2]
 
     # Adverb to adjective
     if word.endswith('ly'):
-        # quickly -> quick, but not fly -> f
-        if len(word) > 4:
+        if len(word) > 4:  # To avoid changing words like "fly"
             return word[:-2]
 
     return word
@@ -101,11 +73,10 @@ def filter_common_words(words: List[str]) -> List[str]:
     # Process words and track base forms
     processed_words = {}
     for word in words:
-        word = word.lower()
-        if word not in common_words:
+        if word.lower() not in common_words:
             base_form = get_base_form(word)
-            # Only keep the first occurrence of each base form
-            if base_form not in processed_words:
+            # Keep the shortest version of the word
+            if base_form not in processed_words or len(word) < len(processed_words[base_form]):
                 processed_words[base_form] = word
 
     return list(processed_words.values())
@@ -181,9 +152,6 @@ def process_text(text: str) -> List[Dict]:
         if word_data:
             results.append(word_data)
     
-    # Sort results alphabetically
-    results.sort(key=lambda x: x['word'].lower())
-    
     return results
 
 if __name__ == "__main__":
@@ -195,4 +163,4 @@ if __name__ == "__main__":
         print(json.dumps(results))
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(1) 

@@ -16,74 +16,93 @@ export async function fetchPhonetics(word: string): Promise<PhoneticData | null>
   const url = `${baseUrl}/${word}?key=${apiKey}`;
 
   try {
-    const response = await fetch(url);
-    
-    // Check if response is ok
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
-      return null;
-    }
+    // Add timeout to the fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-    // Check content type
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      console.error("Received non-JSON response from API");
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      if (response.status === 504) {
+        console.error(`Timeout error for word: ${word}`);
+        // Wait 2 seconds before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return fetchPhonetics(word); // Retry once
+      }
+      console.error(`HTTP error! status: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
 
-    // Check if data is valid
-    if (!data || !Array.isArray(data) || data.length === 0) {
+    // If no data or suggestions returned
+    if (!data || data.length === 0) {
       console.error(`No data found for word: ${word}`);
       return null;
     }
 
-    // Check if first result is a string (suggestions) instead of an object
+    // If we got string suggestions instead of word data
     if (typeof data[0] === 'string') {
+      // For compound words or proper names, return basic data without phonetics
+      if (word.includes('-') || /^[A-Z]/.test(word)) {
+        return {
+          word,
+          phonetic: '',
+          audio_url: null,
+          definition: ''
+        };
+      }
       console.error(`Word not found: ${word}. Suggestions: ${data.join(', ')}`);
       return null;
     }
 
     const wordData = data[0];
 
-    // Extract phonetic spelling and audio file info
-    if ('hwi' in wordData && 'prs' in wordData.hwi) {
-      const pronunciation = wordData.hwi.prs[0];
-      const phonetic = pronunciation.mw || '';
-      const audioFile = pronunciation.sound?.audio || '';
-
-      // Get the first short definition
-      const definition = wordData.shortdef?.[0] || '';
-
-      // Get audio URL
-      let audioUrl = null;
-      if (audioFile) {
-        let subdir;
-        if (audioFile.startsWith('bix')) {
-          subdir = 'bix';
-        } else if (audioFile.startsWith('gg')) {
-          subdir = 'gg';
-        } else if (audioFile.startsWith('_')) {
-          subdir = 'number';
-        } else {
-          subdir = audioFile[0];
-        }
-        audioUrl = `https://media.merriam-webster.com/audio/prons/en/us/mp3/${subdir}/${audioFile}.mp3`;
-      }
-
+    // For words without pronunciation data, return basic data
+    if (!('hwi' in wordData) || !('prs' in wordData.hwi)) {
       return {
         word,
-        phonetic,
-        audio_url: audioUrl,
-        definition
+        phonetic: '',
+        audio_url: null,
+        definition: wordData.shortdef?.[0] || ''
       };
     }
 
-    console.error(`No pronunciation data found for word: ${word}`);
-    return null;
+    const pronunciation = wordData.hwi.prs[0];
+    const phonetic = pronunciation.mw || '';
+    const audioFile = pronunciation.sound?.audio || '';
+    const definition = wordData.shortdef?.[0] || '';
+
+    let audioUrl = null;
+    if (audioFile) {
+      let subdir;
+      if (audioFile.startsWith('bix')) {
+        subdir = 'bix';
+      } else if (audioFile.startsWith('gg')) {
+        subdir = 'gg';
+      } else if (audioFile.startsWith('_')) {
+        subdir = 'number';
+      } else {
+        subdir = audioFile[0];
+      }
+      audioUrl = `https://media.merriam-webster.com/audio/prons/en/us/mp3/${subdir}/${audioFile}.mp3`;
+    }
+
+    return {
+      word,
+      phonetic,
+      audio_url: audioUrl,
+      definition
+    };
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error(`Request timeout for word: ${word}`);
+      // Wait 2 seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return fetchPhonetics(word); // Retry once
+    }
     console.error(`Error fetching phonetics for word '${word}':`, error);
     return null;
   }
