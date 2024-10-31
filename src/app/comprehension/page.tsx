@@ -185,9 +185,8 @@ const ReadingComprehension = () => {
         backgroundImage="radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0)"
         backgroundSize="40px 40px"
         position="relative"
-        pb={20}
       >
-        <Container maxW="container.lg" mt={8}>
+        <Container maxW="container.lg" mt={8} flex="1">
           <VStack spacing={8}>
             <Link href="/" passHref>
               <Heading 
@@ -241,7 +240,6 @@ const ReadingComprehension = () => {
           borderColor="blue.300"
           backdropFilter="blur(8px)"
           boxShadow="0 -4px 6px -1px rgba(0, 0, 0, 0.1)"
-          zIndex={10}
         >
           <Container maxW="container.xl">
             <VStack spacing={2}>
