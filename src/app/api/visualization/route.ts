@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import { spawn } from 'child_process'
 import path from 'path'
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(request: Request) {
   try {
     const { text } = await request.json()
 
-    return new Promise<Response>((resolve) => {
+    return new Promise((resolve) => {
       const process = spawn('python', [
         path.join('src', 'app', 'visualization', 'generate_images.py'),
       ])
@@ -14,19 +14,18 @@ export async function POST(request: Request): Promise<Response> {
       let output = ''
       let errorOutput = ''
 
+      process.stdout.setEncoding('utf8')
+      process.stderr.setEncoding('utf8')
+
       process.stdin.write(JSON.stringify({ text }))
       process.stdin.end()
 
       process.stdout.on('data', (data) => {
-        output += data.toString()
+        output += data
       })
 
       process.stderr.on('data', (data) => {
-        const message = data.toString()
-        console.log('Python progress:', message)
-        if (!message.includes('Progress')) {
-          errorOutput += message
-        }
+        console.log('Python progress:', data.toString().trim())
       })
 
       process.on('close', (code) => {
@@ -38,7 +37,7 @@ export async function POST(request: Request): Promise<Response> {
           }, { status: 500 }))
         } else {
           try {
-            const results = JSON.parse(output)
+            const results = JSON.parse(output.trim())
             resolve(NextResponse.json(results))
           } catch (error) {
             console.error('JSON parsing error:', error)
