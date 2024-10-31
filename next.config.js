@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  images: {
+    domains: [],
+    unoptimized: true,
+  },
   webpack: (config) => {
     config.module.rules.push({
       test: /\.(wav)$/i,
@@ -18,9 +22,6 @@ const nextConfig = {
       ],
     });
     return config;
-  },
-  experimental: {
-    serverComponentsExternalPackages: ['child_process'],
   },
 };
 
