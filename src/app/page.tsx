@@ -16,11 +16,14 @@ import {
   Icon,
   useBreakpointValue,
   useToast,
+  MoonIcon,
+  SunIcon,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { useText } from "./TextContext";
 import { FaBook, FaHeadphones, FaImages, FaMicrophone, FaLinkedin, FaGithub } from "react-icons/fa";
 import Image from 'next/image'
+import ParticlesBackground from '../components/ParticlesBackground';
 
 const CHARACTER_LIMIT = 3500;
 
@@ -59,12 +62,14 @@ const FeatureButton: React.FC<FeatureButtonProps> = ({
         width="100%"
         minH="200px"
         cursor={isDisabled ? "not-allowed" : "pointer"}
-        transition="all 0.3s"
+        transition="all 0.4s ease"
         _hover={{
           transform: isDisabled ? "none" : "translateY(-5px)",
-          shadow: isDisabled ? "none" : "lg",
+          shadow: isDisabled ? "none" : "2xl",
           borderColor: isDisabled ? "red.400" : "blue.400",
+          bg: isDisabled ? "transparent" : "blue.50",
         }}
+        backdropFilter="blur(8px)"
         display="flex"
         flexDirection="column"
         gap={4}
@@ -97,6 +102,8 @@ export default function Home() {
   const isOverLimit = inputText.length > CHARACTER_LIMIT;
   const isMobile = useBreakpointValue({ base: true, md: false });
 
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -117,7 +124,16 @@ export default function Home() {
   };
 
   return (
-    <Box minHeight="100vh" py={16} px={8} bg={bgColor} color={textColor} position="relative">
+    <Box 
+      minHeight="100vh" 
+      py={16} 
+      px={8} 
+      bg={bgColor} 
+      color={textColor} 
+      position="relative"
+      backgroundImage="radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0)"
+      backgroundSize="40px 40px"
+    >
       <Container maxW="container.xl">
         <VStack spacing={16} align="stretch" pb={20}>
           <Fade in={true}>
@@ -126,9 +142,15 @@ export default function Home() {
                 as="h1" 
                 size="2xl" 
                 textAlign="center"
-                bgGradient="linear(to-r, blue.400, purple.500)"
+                bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
                 bgClip="text"
                 fontWeight="extrabold"
+                letterSpacing="tight"
+                _hover={{
+                  bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                }}
+                transition="all 0.3s ease"
+                mb={4}
               >
                 Read On
               </Heading>
@@ -155,50 +177,88 @@ export default function Home() {
             bg={cardBg}
             p={8}
             borderRadius="xl"
-            shadow="md"
+            shadow="lg"
             border="1px"
             borderColor="gray.200"
+            position="relative"
+            _before={{
+              content: '""',
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              zIndex: -1,
+              background: "linear-gradient(45deg, #4299E1, #805AD5)",
+              borderRadius: "xl",
+              margin: "-2px",
+            }}
           >
             <VStack spacing={4} width="100%">
-              <Text fontSize="xl" fontWeight="medium" color="gray.700">
-                Enter Your Text Here
-              </Text>
-              <Textarea
-                placeholder="Type or paste your text here..."
-                size="lg"
-                value={inputText}
-                onChange={handleInputChange}
-                bg={textareaBg}
-                minHeight="200px"
-                resize="vertical"
-                width="100%"
-                borderColor={isOverLimit ? "red.500" : "gray.200"}
-                _hover={{
-                  borderColor: isOverLimit ? "red.600" : "blue.400",
-                }}
-                _focus={{
-                  borderColor: isOverLimit ? "red.700" : "blue.500",
-                  boxShadow: isOverLimit 
-                    ? `0 0 0 1px ${errorColor}` 
-                    : "0 0 0 1px var(--chakra-colors-blue-500)",
-                }}
-                transition="all 0.3s"
-              />
-              {mounted && (
-                <HStack spacing={2} alignSelf="flex-end">
-                  <Text
-                    fontSize="sm"
-                    color={isOverLimit ? "red.500" : "gray.500"}
+              <VStack spacing={1}>
+                <Text fontSize="xl" fontWeight="medium" color="gray.700">
+                  Enter Your Text Here
+                </Text>
+                <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                  Note: Longer texts may result in longer loading times
+                </Text>
+              </VStack>
+              <Box width="100%" position="relative">
+                <Textarea
+                  placeholder="Type or paste your text here..."
+                  size="lg"
+                  value={inputText}
+                  onChange={handleInputChange}
+                  bg={textareaBg}
+                  minHeight="300px"
+                  resize="vertical"
+                  width="100%"
+                  borderColor={isOverLimit ? "red.500" : "transparent"}
+                  _hover={{
+                    borderColor: isOverLimit ? "red.600" : "blue.400",
+                  }}
+                  _focus={{
+                    borderColor: isOverLimit ? "red.700" : "blue.500",
+                    boxShadow: "none",
+                  }}
+                  sx={{
+                    '&::-webkit-scrollbar': {
+                      width: '8px',
+                      borderRadius: '8px',
+                      backgroundColor: `rgba(0, 0, 0, 0.05)`,
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      backgroundColor: `rgba(0, 0, 0, 0.1)`,
+                      borderRadius: '8px',
+                    },
+                  }}
+                />
+                {mounted && (
+                  <HStack 
+                    spacing={2} 
+                    position="absolute" 
+                    bottom={3} 
+                    right={3}
+                    bg={textareaBg}
+                    px={2}
+                    py={1}
+                    borderRadius="md"
+                    opacity={0.8}
                   >
-                    ({inputText.length}/{CHARACTER_LIMIT} characters)
-                  </Text>
-                  {isOverLimit && (
-                    <Text fontSize="sm" color="red.500" fontWeight="medium">
-                      You have exceeded the character limit
+                    <Text
+                      fontSize="sm"
+                      color={isOverLimit ? "red.500" : "gray.500"}
+                    >
+                      ({inputText.length}/{CHARACTER_LIMIT} characters)
                     </Text>
-                  )}
-                </HStack>
-              )}
+                    {isOverLimit && (
+                      <Text fontSize="sm" color="red.500" fontWeight="medium">
+                        Limit exceeded
+                      </Text>
+                    )}
+                  </HStack>
+                )}
+              </Box>
             </VStack>
           </Box>
 
@@ -271,6 +331,12 @@ export default function Home() {
                   borderRadius="lg" 
                   borderColor="gray.200"
                   bg="white"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bgGradient: "linear(to-br, white, blue.50)"
+                  }}
                 >
                   <Text fontSize="lg" fontWeight="bold" mb={4} color="blue.600">
                     1. Phonics Practice
@@ -290,6 +356,12 @@ export default function Home() {
                   borderRadius="lg" 
                   borderColor="gray.200"
                   bg="white"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bgGradient: "linear(to-br, white, blue.50)"
+                  }}
                 >
                   <Text fontSize="lg" fontWeight="bold" mb={4} color="blue.600">
                     2. Reading Comprehension
@@ -310,6 +382,12 @@ export default function Home() {
                   borderRadius="lg" 
                   borderColor="gray.200"
                   bg="white"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bgGradient: "linear(to-br, white, blue.50)"
+                  }}
                 >
                   <Text fontSize="lg" fontWeight="bold" mb={4} color="blue.600">
                     3. Word Visualization
@@ -329,6 +407,12 @@ export default function Home() {
                   borderRadius="lg" 
                   borderColor="gray.200"
                   bg="white"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bgGradient: "linear(to-br, white, blue.50)"
+                  }}
                 >
                   <Text fontSize="lg" fontWeight="bold" mb={4} color="blue.600">
                     4. Read Aloud
@@ -366,7 +450,13 @@ export default function Home() {
                 mx="auto"
               >
                 {/* Aadhil */}
-                <VStack spacing={4}>
+                <VStack 
+                  spacing={4}
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-8px)"
+                  }}
+                >
                   <Box
                     position="relative"
                     width="250px"
@@ -374,6 +464,11 @@ export default function Home() {
                     borderRadius="full"
                     overflow="hidden"
                     boxShadow="xl"
+                    transition="all 0.3s ease"
+                    _hover={{
+                      boxShadow: "2xl",
+                      transform: "scale(1.05)"
+                    }}
                   >
                     <Image
                       src="/authors/aadhil.png"
@@ -414,7 +509,13 @@ export default function Home() {
                 </VStack>
 
                 {/* Asad */}
-                <VStack spacing={4}>
+                <VStack 
+                  spacing={4}
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-8px)"
+                  }}
+                >
                   <Box
                     position="relative"
                     width="250px"
@@ -422,6 +523,11 @@ export default function Home() {
                     borderRadius="full"
                     overflow="hidden"
                     boxShadow="xl"
+                    transition="all 0.3s ease"
+                    _hover={{
+                      boxShadow: "2xl",
+                      transform: "scale(1.05)"
+                    }}
                   >
                     <Image
                       src="/authors/asad.png"
@@ -462,7 +568,13 @@ export default function Home() {
                 </VStack>
 
                 {/* Yousef */}
-                <VStack spacing={4}>
+                <VStack 
+                  spacing={4}
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-8px)"
+                  }}
+                >
                   <Box
                     position="relative"
                     width="250px"
@@ -470,6 +582,11 @@ export default function Home() {
                     borderRadius="full"
                     overflow="hidden"
                     boxShadow="xl"
+                    transition="all 0.3s ease"
+                    _hover={{
+                      boxShadow: "2xl",
+                      transform: "scale(1.05)"
+                    }}
                   >
                     <Image
                       src="/authors/yousef.png"
@@ -580,7 +697,19 @@ export default function Home() {
                 width="100%"
                 px={4}
               >
-                <VStack spacing={3}>
+                <VStack 
+                  spacing={3}
+                  p={6}
+                  borderRadius="xl"
+                  bg="white"
+                  shadow="sm"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bg: "blue.50"
+                  }}
+                >
                   <Text fontWeight="bold" color="gray.700">Frontend</Text>
                   <VStack spacing={2} color="gray.500">
                     <Text>Next.js 14</Text>
@@ -590,7 +719,19 @@ export default function Home() {
                   </VStack>
                 </VStack>
 
-                <VStack spacing={3}>
+                <VStack 
+                  spacing={3}
+                  p={6}
+                  borderRadius="xl"
+                  bg="white"
+                  shadow="sm"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bg: "blue.50"
+                  }}
+                >
                   <Text fontWeight="bold" color="gray.700">Backend</Text>
                   <VStack spacing={2} color="gray.500">
                     <Text>Python</Text>
@@ -599,7 +740,19 @@ export default function Home() {
                   </VStack>
                 </VStack>
 
-                <VStack spacing={3}>
+                <VStack 
+                  spacing={3}
+                  p={6}
+                  borderRadius="xl"
+                  bg="white"
+                  shadow="sm"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bg: "blue.50"
+                  }}
+                >
                   <Text fontWeight="bold" color="gray.700">AI Services</Text>
                   <VStack spacing={2} color="gray.500">
                     <Text>GPT-4</Text>
@@ -610,7 +763,19 @@ export default function Home() {
                   </VStack>
                 </VStack>
 
-                <VStack spacing={3}>
+                <VStack 
+                  spacing={3}
+                  p={6}
+                  borderRadius="xl"
+                  bg="white"
+                  shadow="sm"
+                  transition="all 0.3s ease"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    shadow: "md",
+                    bg: "blue.50"
+                  }}
+                >
                   <Text fontWeight="bold" color="gray.700">APIs</Text>
                   <VStack spacing={2} color="gray.500">
                     <Text>OpenAI</Text>
@@ -629,19 +794,43 @@ export default function Home() {
             left={0}
             right={0}
             py={4}
-            bgGradient="linear(to-r, blue.400, purple.500)"
+            bgGradient="linear(to-r, blue.500, purple.600)"
             borderTop="1px"
             borderColor="blue.300"
+            backdropFilter="blur(8px)"
+            boxShadow="0 -4px 6px -1px rgba(0, 0, 0, 0.1)"
           >
             <Container maxW="container.xl">
-              <Text 
-                textAlign="center" 
-                fontSize="sm" 
-                color="white"
-                fontWeight="medium"
-              >
-                © {new Date().getFullYear()} Read On. Created by Aadhil Mubarak Syed. All rights reserved.
-              </Text>
+              <VStack spacing={2}>
+                <HStack spacing={4}>
+                  <Link 
+                    href="https://github.com/AsadShahid04/ReadOn" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <Button
+                      leftIcon={<FaGithub />}
+                      variant="ghost"
+                      color="white"
+                      _hover={{
+                        bg: "whiteAlpha.200",
+                        transform: "translateY(-2px)"
+                      }}
+                      transition="all 0.2s"
+                    >
+                      View on GitHub
+                    </Button>
+                  </Link>
+                </HStack>
+                <Text 
+                  textAlign="center" 
+                  fontSize="sm" 
+                  color="white"
+                  fontWeight="medium"
+                >
+                  © {new Date().getFullYear()} Read On. Created by Aadhil Mubarak Syed. All rights reserved.
+                </Text>
+              </VStack>
             </Container>
           </Box>
         </VStack>
