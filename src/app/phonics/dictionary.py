@@ -4,7 +4,88 @@ import json
 import requests
 from typing import List, Dict, Set
 
-def filter_common_words(words: List[str]) -> Set[str]:
+def get_base_form(word: str) -> str:
+    """Get the base form of a word by removing common suffixes."""
+    word = word.lower()
+    
+    # Irregular plurals
+    irregular_plurals = {
+        'children': 'child',
+        'mice': 'mouse',
+        'feet': 'foot',
+        'teeth': 'tooth',
+        'geese': 'goose',
+        'men': 'man',
+        'women': 'woman',
+        'lives': 'life',
+        'leaves': 'leaf',
+        'wolves': 'wolf',
+        'knives': 'knife',
+        'shelves': 'shelf',
+        'selves': 'self',
+        'phenomena': 'phenomenon',
+        'criteria': 'criterion',
+        'data': 'datum',
+        'analyses': 'analysis',
+        'theses': 'thesis',
+        'diagnoses': 'diagnosis',
+        'hypotheses': 'hypothesis',
+        'crises': 'crisis',
+        'matrices': 'matrix',
+        'indices': 'index',
+        'vertices': 'vertex',
+        'appendices': 'appendix'
+    }
+    
+    if word in irregular_plurals:
+        return irregular_plurals[word]
+
+    # Regular plural rules (in order of specificity)
+    if word.endswith('ies'):
+        # babies -> baby, but not dies -> die
+        if len(word) > 4:
+            return word[:-3] + 'y'
+    
+    if word.endswith('es'):
+        # matches -> match, boxes -> box
+        if any(word.endswith(suffix) for suffix in ['sses', 'shes', 'ches', 'xes']):
+            return word[:-2]
+        # tomatoes -> tomato
+        if word.endswith('oes') and len(word) > 4:
+            return word[:-2]
+    
+    if word.endswith('s'):
+        # Regular plurals: cats -> cat
+        # But don't change words like 'gas', 'bus', 'kiss'
+        if not any(word.endswith(suffix) for suffix in ['ss', 'us']) and len(word) > 4:
+            return word[:-1]
+
+    # Verb forms
+    if word.endswith('ing'):
+        # running -> run, but not ring -> r
+        if len(word) > 5:
+            # Double consonant: running -> run
+            if word[-4] == word[-5]:
+                return word[:-4]
+            # Regular: walking -> walk
+            return word[:-3]
+
+    if word.endswith('ed'):
+        # walked -> walk, stopped -> stop
+        if len(word) > 4:
+            if word[-3] == word[-4]:
+                return word[:-3]
+            return word[:-2]
+
+    # Adverb to adjective
+    if word.endswith('ly'):
+        # quickly -> quick, but not fly -> f
+        if len(word) > 4:
+            return word[:-2]
+
+    return word
+
+def filter_common_words(words: List[str]) -> List[str]:
     common_words = {
         'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
         'by', 'from', 'up', 'about', 'into', 'over', 'after', 'beneath', 'under',
@@ -17,9 +98,17 @@ def filter_common_words(words: List[str]) -> Set[str]:
         'my', 'your', 'our', 'its', 'here', 'there', 'now', 'then'
     }
     
-    # Convert to lowercase and remove common words
-    unique_words = {word.lower() for word in words if word.lower() not in common_words}
-    return unique_words
+    # Process words and track base forms
+    processed_words = {}
+    for word in words:
+        word = word.lower()
+        if word not in common_words:
+            base_form = get_base_form(word)
+            # Only keep the first occurrence of each base form
+            if base_form not in processed_words:
+                processed_words[base_form] = word
+
+    return list(processed_words.values())
 
 def get_word_data(word: str, api_key: str) -> Dict:
     base_url = "https://www.dictionaryapi.com/api/v3/references/collegiate/json"
@@ -44,11 +133,15 @@ def get_word_data(word: str, api_key: str) -> Dict:
             sound_info = pronunciation.get('sound', {})
             audio_file = sound_info.get('audio', '')
             
+            # Get the first short definition
+            definition = word_data.get('shortdef', [''])[0] if 'shortdef' in word_data else ''
+            
             return {
                 "word": word,
                 "phonetic": phonetic,
                 "audio_file": audio_file,
-                "audio_url": get_audio_url(audio_file) if audio_file else None
+                "audio_url": get_audio_url(audio_file) if audio_file else None,
+                "definition": definition
             }
             
         return None
@@ -78,7 +171,7 @@ def process_text(text: str) -> List[Dict]:
     # Split text into words and remove punctuation
     words = [word.strip('.,!?()[]{}":;') for word in text.split()]
     
-    # Filter out common words and get unique words
+    # Filter out common words and get unique base forms
     unique_words = filter_common_words(words)
     
     # Get dictionary data for each word
@@ -87,6 +180,9 @@ def process_text(text: str) -> List[Dict]:
         word_data = get_word_data(word, api_key)
         if word_data:
             results.append(word_data)
+    
+    # Sort results alphabetically
+    results.sort(key=lambda x: x['word'].lower())
     
     return results
 
@@ -99,4 +195,4 @@ if __name__ == "__main__":
         print(json.dumps(results))
     except Exception as e:
         print(f"Error: {str(e)}", file=sys.stderr)
-        sys.exit(1) 
+        sys.exit(1)
