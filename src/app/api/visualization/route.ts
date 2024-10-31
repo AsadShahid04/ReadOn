@@ -11,46 +11,50 @@ export async function POST(request: Request) {
         path.join('src', 'app', 'visualization', 'generate_images.py'),
       ])
 
-      let output = ''
-      let errorOutput = ''
+      let stdoutData = '';
+      let stderrData = '';
 
-      process.stdout.setEncoding('utf8')
-      process.stderr.setEncoding('utf8')
+      // Set encoding to prevent buffer issues
+      process.stdout.setEncoding('utf8');
+      process.stderr.setEncoding('utf8');
 
-      process.stdin.write(JSON.stringify({ text }))
-      process.stdin.end()
+      process.stdin.write(JSON.stringify({ text }));
+      process.stdin.end();
 
+      // Collect stdout data
       process.stdout.on('data', (data) => {
-        output += data
-      })
+        stdoutData += data;
+      });
 
+      // Log progress updates
       process.stderr.on('data', (data) => {
-        console.log('Python progress:', data.toString().trim())
-      })
+        console.log('Python progress:', data.toString().trim());
+      });
 
       process.on('close', (code) => {
         if (code !== 0) {
-          console.error('Process failed:', errorOutput)
+          console.error('Process failed:', stderrData);
           resolve(NextResponse.json({ 
             error: 'Failed to process text', 
-            details: errorOutput 
-          }, { status: 500 }))
+            details: stderrData 
+          }, { status: 500 }));
         } else {
           try {
-            const results = JSON.parse(output.trim())
-            resolve(NextResponse.json(results))
+            // Parse the complete stdout data once
+            const results = JSON.parse(stdoutData.trim());
+            resolve(NextResponse.json(results));
           } catch (error) {
-            console.error('JSON parsing error:', error)
+            console.error('JSON parsing error:', error);
             resolve(NextResponse.json({ 
               error: 'Invalid JSON output', 
-              details: output 
-            }, { status: 500 }))
+              details: stdoutData 
+            }, { status: 500 }));
           }
         }
-      })
-    })
+      });
+    });
   } catch (error) {
-    console.error('Error in visualization route:', error)
-    return NextResponse.json({ error: 'Failed to process text' }, { status: 500 })
+    console.error('Error in visualization route:', error);
+    return NextResponse.json({ error: 'Failed to process text' }, { status: 500 });
   }
 }
