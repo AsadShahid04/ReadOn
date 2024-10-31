@@ -60,22 +60,26 @@ const WordVisualization = () => {
       >
         <Container maxW="container.lg" mt={8}>
           <VStack spacing={8}>
-            <Heading 
-              as="h1" 
-              size="2xl" 
-              textAlign="center"
-              bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
-              bgClip="text"
-              fontWeight="extrabold"
-              letterSpacing="tight"
-              _hover={{
-                bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
-              }}
-              transition="all 0.3s ease"
-              mb={4}
-            >
-              Read On
-            </Heading>
+            <Link href="/" passHref>
+              <Heading 
+                as="h1" 
+                size="2xl" 
+                textAlign="center"
+                bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+                bgClip="text"
+                fontWeight="extrabold"
+                letterSpacing="tight"
+                _hover={{
+                  bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                  cursor: "pointer",
+                  transform: "translateY(-2px)"
+                }}
+                transition="all 0.3s ease"
+                mb={4}
+              >
+                Read On
+              </Heading>
+            </Link>
             <Text 
               fontSize="xl" 
               textAlign="center" 
@@ -148,22 +152,26 @@ const WordVisualization = () => {
     >
       <Container maxW="container.lg" flex="1" pt={8}>
         <VStack spacing={8} mt={8}>
-          <Heading 
-            as="h1" 
-            size="2xl" 
-            textAlign="center"
-            bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
-            bgClip="text"
-            fontWeight="extrabold"
-            letterSpacing="tight"
-            _hover={{
-              bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
-            }}
-            transition="all 0.3s ease"
-            mb={4}
-          >
-            Read On
-          </Heading>
+          <Link href="/" passHref>
+            <Heading 
+              as="h1" 
+              size="2xl" 
+              textAlign="center"
+              bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+              bgClip="text"
+              fontWeight="extrabold"
+              letterSpacing="tight"
+              _hover={{
+                bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                cursor: "pointer",
+                transform: "translateY(-2px)"
+              }}
+              transition="all 0.3s ease"
+              mb={4}
+            >
+              Read On
+            </Heading>
+          </Link>
           <Text 
             fontSize="xl" 
             textAlign="center" 
@@ -200,24 +208,25 @@ const WordVisualization = () => {
         {error ? (
           <Text color="red.500" textAlign="center" fontSize="xl">{error}</Text>
         ) : results.length > 0 ? (
-          <VStack spacing={12} mt={8} align="stretch" mb={8}>
+          <VStack spacing={12} mt={8} align="stretch" mb={20}>
             {results.map((result, index) => (
-              <VStack key={index} spacing={6} align="stretch">
+              <VStack key={index} spacing={0} align="stretch">
                 <Text 
                   fontSize="xl"
                   color="gray.700"
                   bg="white"
                   p={8}
-                  borderRadius="lg"
+                  borderTopRadius="lg"
                   boxShadow="sm"
                   lineHeight="tall"
+                  mb={0}
                 >
                   {result.segment}
                 </Text>
                 <Image 
                   src={result.image_data} 
                   alt={result.segment}
-                  borderRadius="lg"
+                  borderBottomRadius="lg"
                   width="100%"
                   height="auto"
                   boxShadow="lg"
