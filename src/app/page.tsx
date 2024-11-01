@@ -653,12 +653,12 @@ export default function Home() {
               </Heading>
               
               <Text fontSize="lg" textAlign="left" lineHeight="tall">
-                As someone who has worked with children with learning disabilities for a majority of my life, 
-                we have witnessed firsthand the unique challenges these remarkable young minds face in their 
-                educational journey. Traditional learning methods often fall short in addressing their diverse 
-                needs, leaving many bright and capable students struggling to reach their full potential. 
-                This personal experience has been the driving force behind Read On, born from a deep-seated 
-                desire to create a tool that adapts to each child's unique learning style and pace.
+                Having worked with children with learning disabilities , we have witnessed firsthand the 
+                unique challenges these remarkable young minds face in their educational journey. 
+                Traditional learning methods often fall short in addressing their diverse needs, leaving 
+                many bright and capable students struggling to reach their full potential. This personal 
+                experience has been the driving force behind Read On, born from a deep-seated desire to 
+                create a tool that adapts to each child's unique learning style and pace.
               </Text>
 
               <Text fontSize="lg" textAlign="left" lineHeight="tall">
