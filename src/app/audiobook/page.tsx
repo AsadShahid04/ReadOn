@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Box, Heading, Text, VStack, Button, Spinner, useToast } from "@chakra-ui/react";
+import { Box, Heading, Text, VStack, Button, Spinner, useToast, Container, Flex } from "@chakra-ui/react";
 import { useText } from "../TextContext";
 import Link from "next/link";
+import { FaHome, FaBackward, FaForward, FaPlay, FaPause } from 'react-icons/fa';
+import { Slider, SliderTrack, SliderFilledTrack, SliderThumb, HStack } from "@chakra-ui/react";
 
 const Audiobook = () => {
   const { inputText } = useText();
@@ -15,6 +17,8 @@ const Audiobook = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const words = inputText.split(/\s+/);
   const toast = useToast();
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     if (inputText) {
@@ -41,41 +45,13 @@ const Audiobook = () => {
       }
 
       const audioBlob = await response.blob();
-      console.log("Received audio blob:", audioBlob);
-      console.log("Blob size:", audioBlob.size);
-      console.log("Blob type:", audioBlob.type);
-
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
       
       if (audioRef.current) {
         audioRef.current.src = url;
-        
-        // Add more event listeners for debugging
         audioRef.current.onloadeddata = () => {
-          console.log("Audio data loaded");
           setAudioReady(true);
-        };
-        
-        audioRef.current.oncanplay = () => {
-          console.log("Audio can play");
-          setAudioReady(true);
-        };
-
-        audioRef.current.onloadedmetadata = () => {
-          console.log("Audio metadata loaded, duration:", audioRef.current?.duration);
-          setAudioReady(true);
-        };
-
-        audioRef.current.onerror = (e) => {
-          console.error("Audio loading error:", audioRef.current?.error);
-          toast({
-            title: "Error",
-            description: `Failed to load audio: ${audioRef.current?.error?.message || 'Unknown error'}`,
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
         };
       }
     } catch (error) {
@@ -97,27 +73,12 @@ const Audiobook = () => {
 
     try {
       if (isPlaying) {
-        console.log("Pausing audio");
         await audioRef.current.pause();
       } else {
-        console.log("Playing audio");
-        // Reset the audio to start if it ended
         if (audioRef.current.ended) {
           audioRef.current.currentTime = 0;
         }
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error("Playback error:", error);
-            toast({
-              title: "Playback Error",
-              description: error.message || "Failed to play audio",
-              status: "error",
-              duration: 5000,
-              isClosable: true,
-            });
-          });
-        }
+        await audioRef.current.play();
       }
       setIsPlaying(!isPlaying);
     } catch (error) {
@@ -136,7 +97,6 @@ const Audiobook = () => {
     if (audioRef.current) {
       const currentTime = audioRef.current.currentTime;
       const duration = audioRef.current.duration;
-      // Calculate which word should be highlighted based on current time
       const wordIndex = Math.floor((currentTime / duration) * words.length);
       if (wordIndex >= 0 && wordIndex < words.length) {
         setCurrentWordIndex(wordIndex);
@@ -144,7 +104,6 @@ const Audiobook = () => {
     }
   };
 
-  // Cleanup function to revoke object URL
   useEffect(() => {
     return () => {
       if (audioUrl) {
@@ -153,66 +112,393 @@ const Audiobook = () => {
     };
   }, [audioUrl]);
 
-  return (
-    <Box minHeight="100vh" py={16} px={8}>
-      <VStack spacing={8} align="stretch">
-        <Heading as="h1" size="2xl" textAlign="center">
-          Read Aloud
-        </Heading>
-        {isLoading ? (
-          <VStack spacing={4}>
-            <Spinner size="xl" />
-            <Text>Generating audio...</Text>
-          </VStack>
-        ) : (
-          <>
-            <Box borderWidth={1} borderRadius="lg" p={4} maxHeight="60vh" overflowY="auto">
-              <Text fontSize="lg" lineHeight="tall">
-                {words.map((word, index) => (
-                  <Text
-                    key={index}
-                    as="span"
-                    bg={index === currentWordIndex ? "yellow.200" : "transparent"}
-                    display="inline-block"
-                    mx={1}
-                  >
-                    {word}
-                  </Text>
-                ))}
-              </Text>
-            </Box>
-            <audio
-              ref={audioRef}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={() => {
-                setIsPlaying(false);
-                setCurrentWordIndex(-1);
-              }}
-              onPlay={() => {
-                console.log("Audio started playing");
-                setIsPlaying(true);
-              }}
-              onPause={() => {
-                console.log("Audio paused");
-                setIsPlaying(false);
-              }}
-              controls // Add controls for debugging
-            />
-            <Button 
-              onClick={togglePlayPause} 
-              colorScheme="blue"
-              isDisabled={!audioReady}
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  const handleSliderChange = (value: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = value;
+      setCurrentTime(value);
+    }
+  };
+
+  const skipBackward = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
+    }
+  };
+
+  const skipForward = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Box 
+        minHeight="100vh" 
+        display="flex"
+        flexDirection="column"
+        backgroundImage="radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0)"
+        backgroundSize="40px 40px"
+        position="relative"
+        pb={20}
+      >
+        <Container maxW="container.lg" mt={8}>
+          <VStack spacing={8}>
+            <Link href="/" passHref>
+              <Heading 
+                as="h1" 
+                size="2xl" 
+                textAlign="center"
+                bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+                bgClip="text"
+                fontWeight="extrabold"
+                letterSpacing="tight"
+                _hover={{
+                  bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                  cursor: "pointer",
+                  transform: "translateY(-2px)"
+                }}
+                transition="all 0.3s ease"
+                mb={4}
+              >
+                Read On
+              </Heading>
+            </Link>
+            <Text 
+              fontSize="xl" 
+              textAlign="center" 
+              maxWidth="800px" 
+              mx="auto"
+              color="gray.600"
+              lineHeight="tall"
             >
-              {isPlaying ? "Pause" : "Play"}
-            </Button>
-          </>
-        )}
-        <Link href="/" passHref>
-          <Button as="a" colorScheme="blue">
-            Back to Home
-          </Button>
-        </Link>
-      </VStack>
+              Your AI-Powered Reading Companion
+            </Text>
+          </VStack>
+        </Container>
+
+        <Flex 
+          flex="1" 
+          alignItems="center" 
+          justifyContent="center"
+        >
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" thickness="4px" />
+            <Text fontSize="lg" color="gray.600">Generating audio...</Text>
+          </VStack>
+        </Flex>
+
+        <Box
+          position="fixed"
+          bottom={0}
+          left={0}
+          right={0}
+          py={4}
+          bgGradient="linear(to-r, blue.500, purple.600)"
+          borderTop="1px"
+          borderColor="blue.300"
+          backdropFilter="blur(8px)"
+          boxShadow="0 -4px 6px -1px rgba(0, 0, 0, 0.1)"
+          zIndex={10}
+        >
+          <Container maxW="container.xl">
+            <VStack spacing={2}>
+              <Link href="/" passHref>
+                <Button
+                  leftIcon={<FaHome />}
+                  variant="ghost"
+                  color="white"
+                  size="lg"
+                  _hover={{
+                    bg: "whiteAlpha.200",
+                    transform: "translateY(-2px)"
+                  }}
+                  transition="all 0.2s"
+                >
+                  Back to Home
+                </Button>
+              </Link>
+              <Text 
+                textAlign="center" 
+                fontSize="sm" 
+                color="white"
+                fontWeight="medium"
+              >
+                © {new Date().getFullYear()} Read On. Created by Aadhil Mubarak Syed. All rights reserved.
+              </Text>
+            </VStack>
+          </Container>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box 
+      minHeight="100vh" 
+      backgroundImage="radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0)"
+      backgroundSize="40px 40px"
+      position="relative"
+      pb={32}
+    >
+      <Container maxW="container.lg" pt={8}>
+        <VStack spacing={8} mt={8}>
+          <Link href="/" passHref>
+            <Heading 
+              as="h1" 
+              size="2xl" 
+              textAlign="center"
+              bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+              bgClip="text"
+              fontWeight="extrabold"
+              letterSpacing="tight"
+              _hover={{
+                bgGradient: "linear(to-r, blue.500, purple.600, pink.600)",
+                cursor: "pointer",
+                transform: "translateY(-2px)"
+              }}
+              transition="all 0.3s ease"
+              mb={4}
+            >
+              Read On
+            </Heading>
+          </Link>
+          <Text 
+            fontSize="xl" 
+            textAlign="center" 
+            maxWidth="800px" 
+            mx="auto"
+            color="gray.600"
+            lineHeight="tall"
+          >
+            Your AI-Powered Reading Companion
+          </Text>
+          <Heading 
+            as="h2" 
+            size="xl" 
+            textAlign="center"
+            color="blue.600"
+          >
+            Read Aloud
+          </Heading>
+          <Text 
+            fontSize="lg" 
+            textAlign="center" 
+            maxWidth="800px" 
+            mx="auto"
+            color="gray.600"
+            lineHeight="tall"
+            mb={4}
+          >
+            Listen to your text being read aloud while following along with highlighted words. 
+            Use the audio controls to play, pause, or skip through the content at your own pace.
+          </Text>
+
+          <Box 
+            borderWidth={1} 
+            borderRadius="lg" 
+            p={4} 
+            maxHeight="60vh" 
+            overflowY="auto"
+            bg="white"
+            boxShadow="xl"
+          >
+            <Text fontSize="lg" lineHeight="tall">
+              {words.map((word, index) => (
+                <Text
+                  key={index}
+                  as="span"
+                  bg={index === currentWordIndex ? "yellow.200" : "transparent"}
+                  display="inline-block"
+                  mx={1}
+                >
+                  {word}
+                </Text>
+              ))}
+            </Text>
+          </Box>
+
+          <audio
+            ref={audioRef}
+            onTimeUpdate={() => {
+              if (audioRef.current) {
+                setCurrentTime(audioRef.current.currentTime);
+                handleTimeUpdate();
+              }
+            }}
+            onLoadedMetadata={() => {
+              if (audioRef.current) {
+                setDuration(audioRef.current.duration);
+              }
+            }}
+            onEnded={() => {
+              setIsPlaying(false);
+              setCurrentWordIndex(-1);
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+          />
+
+          <Box
+            p={6}
+            borderRadius="full"
+            bg="white"
+            boxShadow="xl"
+            width="100%"
+            height="160px"
+            textAlign="center"
+            border="1px solid"
+            borderColor="gray.200"
+            transition="all 0.3s ease"
+            _hover={{
+              transform: "translateY(-2px)",
+              boxShadow: "2xl"
+            }}
+            position="relative"
+            mx="auto"
+          >
+            <VStack spacing={6} height="100%" justify="center">
+              <Box position="relative" width="90%">
+                <Slider
+                  aria-label="audio-progress"
+                  value={currentTime}
+                  min={0}
+                  max={duration}
+                  onChange={handleSliderChange}
+                  width="100%"
+                >
+                  <SliderTrack bg="gray.200" height="4px">
+                    <SliderFilledTrack bg="blue.500" />
+                  </SliderTrack>
+                  <SliderThumb boxSize={4} />
+                </Slider>
+                
+                <Text 
+                  fontSize="md" 
+                  color="gray.600" 
+                  fontWeight="medium"
+                  position="absolute"
+                  bottom="-6"
+                  left="0"
+                >
+                  {formatTime(currentTime)}
+                </Text>
+                
+                <Text 
+                  fontSize="md" 
+                  color="gray.600" 
+                  fontWeight="medium"
+                  position="absolute"
+                  bottom="-6"
+                  right="0"
+                >
+                  {formatTime(duration)}
+                </Text>
+              </Box>
+
+              <HStack spacing={12} justify="center" mt={-4}>
+                <Button
+                  onClick={skipBackward}
+                  colorScheme="blue"
+                  variant="ghost"
+                  size="lg"
+                  isDisabled={!audioReady}
+                  _hover={{ transform: "translateY(-2px)" }}
+                  transition="all 0.2s"
+                >
+                  <FaBackward />
+                </Button>
+
+                <Button
+                  onClick={togglePlayPause}
+                  colorScheme="blue"
+                  size="lg"
+                  isDisabled={!audioReady}
+                  width="60px"
+                  height="60px"
+                  borderRadius="full"
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    boxShadow: "xl",
+                  }}
+                  _active={{
+                    transform: "translateY(1px)"
+                  }}
+                  transition="all 0.2s"
+                  bgGradient="linear(to-r, blue.400, purple.500)"
+                  _disabled={{
+                    opacity: 0.6,
+                    cursor: "not-allowed",
+                    transform: "none"
+                  }}
+                >
+                  {isPlaying ? <FaPause size={24} /> : <FaPlay size={24} />}
+                </Button>
+
+                <Button
+                  onClick={skipForward}
+                  colorScheme="blue"
+                  variant="ghost"
+                  size="lg"
+                  isDisabled={!audioReady}
+                  _hover={{ transform: "translateY(-2px)" }}
+                  transition="all 0.2s"
+                >
+                  <FaForward />
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </VStack>
+      </Container>
+
+      <Box
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        py={4}
+        bgGradient="linear(to-r, blue.500, purple.600)"
+        borderTop="1px"
+        borderColor="blue.300"
+        backdropFilter="blur(8px)"
+        boxShadow="0 -4px 6px -1px rgba(0, 0, 0, 0.1)"
+        zIndex={10}
+      >
+        <Container maxW="container.xl">
+          <VStack spacing={2}>
+            <Link href="/" passHref>
+              <Button
+                leftIcon={<FaHome />}
+                variant="ghost"
+                color="white"
+                size="lg"
+                _hover={{
+                  bg: "whiteAlpha.200",
+                  transform: "translateY(-2px)"
+                }}
+                transition="all 0.2s"
+              >
+                Back to Home
+              </Button>
+            </Link>
+            <Text 
+              textAlign="center" 
+              fontSize="sm" 
+              color="white"
+              fontWeight="medium"
+            >
+              © {new Date().getFullYear()} Read On. Created by Aadhil Mubarak Syed. All rights reserved.
+            </Text>
+          </VStack>
+        </Container>
+      </Box>
     </Box>
   );
 };
