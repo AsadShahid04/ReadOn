@@ -16,8 +16,6 @@ import {
   Icon,
   useBreakpointValue,
   useToast,
-  MoonIcon,
-  SunIcon,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { useText } from "./TextContext";
@@ -217,6 +215,9 @@ export default function Home() {
                   Enter Your Text Here
                 </Text>
                 <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                  Max 3500 Characters
+                </Text>
+                <Text fontSize="sm" color="gray.500" fontStyle="italic">
                   Note: Longer texts may result in longer loading times
                 </Text>
               </VStack>
@@ -249,33 +250,31 @@ export default function Home() {
                       borderRadius: '8px',
                     },
                   }}
+                  mb={2}
                 />
-                {mounted && (
-                  <HStack 
-                    spacing={2} 
-                    position="absolute" 
-                    bottom={3} 
-                    right={3}
-                    bg={textareaBg}
-                    px={2}
-                    py={1}
-                    borderRadius="md"
-                    opacity={0.8}
-                  >
-                    <Text
-                      fontSize="sm"
-                      color={isOverLimit ? "red.500" : "gray.500"}
-                    >
-                      ({inputText.length}/{CHARACTER_LIMIT} characters)
-                    </Text>
-                    {isOverLimit && (
-                      <Text fontSize="sm" color="red.500" fontWeight="medium">
-                        Limit exceeded
-                      </Text>
-                    )}
-                  </HStack>
-                )}
               </Box>
+              
+              {mounted && (
+                <HStack 
+                  spacing={2} 
+                  justify="flex-end"
+                  width="100%"
+                  px={2}
+                >
+                  <Text
+                    fontSize="sm"
+                    color={isOverLimit ? "red.500" : "gray.500"}
+                    fontWeight="medium"
+                  >
+                    {inputText.length}/{CHARACTER_LIMIT} characters
+                  </Text>
+                  {isOverLimit && (
+                    <Text fontSize="sm" color="red.500" fontWeight="medium">
+                      Limit exceeded
+                    </Text>
+                  )}
+                </HStack>
+              )}
             </VStack>
           </Box>
 
@@ -835,7 +834,7 @@ export default function Home() {
                       }}
                       transition="all 0.2s"
                     >
-                      View on GitHub
+                      View GitHub Repository
                     </Button>
                   </Link>
                 </HStack>
