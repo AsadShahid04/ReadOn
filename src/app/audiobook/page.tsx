@@ -191,6 +191,7 @@ const Audiobook = () => {
           <VStack spacing={4}>
             <Spinner size="xl" color="blue.500" thickness="4px" />
             <Text fontSize="lg" color="gray.600">Generating audio...</Text>
+            <Text fontSize="md" color="gray.500">This may take a few minutes.</Text>
           </VStack>
         </Flex>
 
