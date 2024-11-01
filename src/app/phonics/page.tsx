@@ -11,6 +11,7 @@ interface WordData {
   word: string;
   phonetic: string;
   audio_url: string | null;
+  definition: string;
 }
 
 const Phonics = () => {
@@ -388,6 +389,15 @@ const Phonics = () => {
                       </Text>
                       <Text fontSize="2xl" textAlign="center" color="gray.600">
                         {words[currentIndex].phonetic}
+                      </Text>
+                      <Text 
+                        fontSize="md" 
+                        textAlign="center" 
+                        color="gray.500"
+                        maxW="80%"
+                        fontStyle="italic"
+                      >
+                        {words[currentIndex].definition}
                       </Text>
                       {words[currentIndex].audio_url && (
                         <IconButton
