@@ -137,7 +137,7 @@ export default function Home() {
       <Container maxW="container.xl">
         <VStack spacing={16} align="stretch" pb={20}>
           <Fade in={true}>
-            <VStack spacing={8}>
+            <VStack spacing={6}>
               <Heading 
                 as="h1" 
                 size="2xl" 
@@ -154,17 +154,34 @@ export default function Home() {
               >
                 Read On
               </Heading>
+              <VStack spacing={2}>
+                <Text 
+                  fontSize="xl" 
+                  textAlign="center" 
+                  maxWidth="800px" 
+                  mx="auto"
+                  color="gray.600"
+                  lineHeight="tall"
+                >
+                  Your AI-Powered Reading Companion
+                </Text>
+                <Text
+                  fontSize="lg"
+                  textAlign="center"
+                  color="gray.500"
+                  fontStyle="italic"
+                >
+                  A CalHacks 11.0 Submission
+                </Text>
+              </VStack>
               <Text 
-                fontSize="xl" 
+                fontSize="lg" 
                 textAlign="center" 
-                maxWidth="800px" 
-                mx="auto"
-                color="gray.600"
-                lineHeight="tall"
+                lineHeight="tall" 
+                maxWidth="1000px"
+                mt={4}
+                mb={2}
               >
-                Your AI-Powered Reading Companion
-              </Text>
-              <Text fontSize="lg" textAlign="center" lineHeight="tall" mb={6} maxWidth="1000px">
                 Read On is an AI-powered reading companion designed to enhance your learning experience
                 through multiple interactive tools. Start by inputting your text in the box below,
                 then select one of the four distinct learning modes:
