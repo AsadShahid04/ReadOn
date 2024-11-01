@@ -186,7 +186,7 @@ const ReadingComprehension = () => {
         backgroundSize="40px 40px"
         position="relative"
       >
-        <Container maxW="container.lg" mt={8} flex="1">
+        <Container maxW="container.lg" mt={8}>
           <VStack spacing={8}>
             <Link href="/" passHref>
               <Heading 
@@ -221,16 +221,13 @@ const ReadingComprehension = () => {
           </VStack>
         </Container>
 
-        <Flex 
-          flex="1" 
-          alignItems="center" 
-          justifyContent="center"
-        >
+        <Box flex="1" display="flex" alignItems="center" justifyContent="center">
           <VStack spacing={4}>
             <Spinner size="xl" color="blue.500" thickness="4px" />
             <Text fontSize="lg" color="gray.600">Generating questions...</Text>
+            <Text fontSize="md" color="gray.500">This may take a few minutes.</Text>
           </VStack>
-        </Flex>
+        </Box>
 
         {/* Footer */}
         <Box
