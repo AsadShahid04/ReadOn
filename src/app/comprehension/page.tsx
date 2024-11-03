@@ -142,7 +142,7 @@ const ReadingComprehension = () => {
     if (allCorrect) {
       onOpen(); // Show modal when all questions are correct
     }
-  }, [answeredCorrectly, questions.length]);
+  }, [answeredCorrectly, questions, onOpen]);
 
   const allQuestionsCorrect = questions.length > 0 && 
     questions.every((_, index) => answeredCorrectly[index]);

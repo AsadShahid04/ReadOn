@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Box, Heading, Text, VStack, Button, Spinner, useToast, Container, Flex } from "@chakra-ui/react";
 import { useText } from "../TextContext";
 import Link from "next/link";
@@ -20,15 +20,7 @@ const Audiobook = () => {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  useEffect(() => {
-    if (inputText) {
-      generateAudio();
-      setAudioReady(false);
-      setAudioUrl(null);
-    }
-  }, [inputText]);
-
-  const generateAudio = async () => {
+  const generateAudio = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/text-to-speech", {
@@ -66,7 +58,15 @@ const Audiobook = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputText, toast]);
+
+  useEffect(() => {
+    if (inputText) {
+      generateAudio();
+      setAudioReady(false);
+      setAudioUrl(null);
+    }
+  }, [inputText, generateAudio]);
 
   const togglePlayPause = async () => {
     if (!audioRef.current) return;
