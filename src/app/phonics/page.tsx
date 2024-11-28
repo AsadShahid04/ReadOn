@@ -6,7 +6,7 @@ import { FaVolumeUp, FaArrowLeft, FaArrowRight, FaHome } from 'react-icons/fa'
 import Link from 'next/link'
 import { useText } from '../TextContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import LRUCache from '@/utils/LRUCache'
+import LRUCache from '../../utils/LRUCache'
 
 interface WordData {
   word: string;
@@ -104,9 +104,12 @@ const Phonics = () => {
       >
         <Container maxW="container.lg" mt={8}>
           <VStack spacing={8}>
-            <Link href="/" passHref>
+            <Box 
+              as={Link} 
+              href="/"
+              _hover={{ textDecoration: 'none' }}
+            >
               <Heading 
-                as="h1" 
                 size="2xl" 
                 textAlign="center"
                 bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
@@ -123,7 +126,7 @@ const Phonics = () => {
               >
                 Read On
               </Heading>
-            </Link>
+            </Box>
             <Text 
               fontSize="xl" 
               textAlign="center" 
@@ -156,7 +159,11 @@ const Phonics = () => {
         >
           <Container maxW="container.xl">
             <VStack spacing={2}>
-              <Link href="/" passHref>
+              <Box 
+                as={Link}
+                href="/"
+                _hover={{ textDecoration: 'none' }}
+              >
                 <Button
                   leftIcon={<FaHome />}
                   variant="ghost"
@@ -170,7 +177,7 @@ const Phonics = () => {
                 >
                   Back to Home
                 </Button>
-              </Link>
+              </Box>
               <Text 
                 textAlign="center" 
                 fontSize="sm" 
@@ -263,9 +270,12 @@ const Phonics = () => {
         >
           <Fade in={true}>
             <VStack spacing={8}>
-              <Link href="/" passHref>
+              <Box 
+                as={Link} 
+                href="/"
+                _hover={{ textDecoration: 'none' }}
+              >
                 <Heading 
-                  as="h1" 
                   size="2xl" 
                   textAlign="center"
                   bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
@@ -282,7 +292,7 @@ const Phonics = () => {
                 >
                   Read On
                 </Heading>
-              </Link>
+              </Box>
               <Text 
                 fontSize="xl" 
                 textAlign="center" 
@@ -479,7 +489,11 @@ const Phonics = () => {
       >
         <Container maxW="container.xl">
           <VStack spacing={2}>
-            <Link href="/" passHref>
+            <Box 
+              as={Link}
+              href="/"
+              _hover={{ textDecoration: 'none' }}
+            >
               <Button
                 leftIcon={<FaHome />}
                 variant="ghost"
@@ -493,7 +507,7 @@ const Phonics = () => {
               >
                 Back to Home
               </Button>
-            </Link>
+            </Box>
             <Text 
               textAlign="center" 
               fontSize="sm" 

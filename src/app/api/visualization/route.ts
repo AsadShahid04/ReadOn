@@ -1,60 +1,57 @@
-import { NextResponse } from 'next/server'
-import { spawn } from 'child_process'
-import path from 'path'
+import { NextResponse } from 'next/server';
+import { spawn } from 'child_process';
+import path from 'path';
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   try {
-    const { text } = await request.json()
+    const { text } = await request.json();
+    
+    // Path to Python script
+    const scriptPath = path.join(process.cwd(), 'src', 'app', 'visualization', 'generate_images.py');
+    
+    return new Promise((resolve, reject) => {
+      const process = spawn('python', [scriptPath]);
+      let outputData = '';
+      let errorData = '';
 
-    return new Promise((resolve) => {
-      const process = spawn('python', [
-        path.join('src', 'app', 'visualization', 'generate_images.py'),
-      ])
-
-      let stdoutData = '';
-      let stderrData = '';
-
-      // Set encoding to prevent buffer issues
-      process.stdout.setEncoding('utf8');
-      process.stderr.setEncoding('utf8');
-
+      // Send input to Python script
       process.stdin.write(JSON.stringify({ text }));
       process.stdin.end();
 
-      // Collect stdout data
       process.stdout.on('data', (data) => {
-        stdoutData += data;
+        outputData += data.toString();
       });
 
-      // Log progress updates
       process.stderr.on('data', (data) => {
-        console.log('Python progress:', data.toString().trim());
+        errorData += data.toString();
+        console.error(`Python Error: ${data}`);
       });
 
       process.on('close', (code) => {
         if (code !== 0) {
-          console.error('Process failed:', stderrData);
-          resolve(NextResponse.json({ 
-            error: 'Failed to process text', 
-            details: stderrData 
-          }, { status: 500 }));
+          console.error(`Process exited with code ${code}`);
+          resolve(NextResponse.json(
+            { error: 'Failed to generate images', details: errorData },
+            { status: 500 }
+          ));
         } else {
           try {
-            // Parse the complete stdout data once
-            const results = JSON.parse(stdoutData.trim());
+            const results = JSON.parse(outputData);
             resolve(NextResponse.json(results));
-          } catch (error) {
-            console.error('JSON parsing error:', error);
-            resolve(NextResponse.json({ 
-              error: 'Invalid JSON output', 
-              details: stdoutData 
-            }, { status: 500 }));
+          } catch (e) {
+            resolve(NextResponse.json(
+              { error: 'Failed to parse Python output' },
+              { status: 500 }
+            ));
           }
         }
       });
     });
   } catch (error) {
     console.error('Error in visualization route:', error);
-    return NextResponse.json({ error: 'Failed to process text' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to process request' },
+      { status: 500 }
+    );
   }
 }
