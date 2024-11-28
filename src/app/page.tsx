@@ -19,7 +19,7 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { useText } from "./TextContext";
-import { FaBook, FaHeadphones, FaImages, FaMicrophone, FaLinkedin, FaGithub } from "react-icons/fa";
+import { FaBook, FaHeadphones, FaImages, FaMicrophone, FaLinkedin, FaGithub, FaGraduationCap } from "react-icons/fa";
 import Image from 'next/image'
 import ParticlesBackground from '../components/ParticlesBackground';
 
@@ -326,6 +326,17 @@ export default function Home() {
                 onDisabledClick={handleDisabledClick}
               />
             </SimpleGrid>
+
+            <Box width="100%" mt={8}>
+              <FeatureButton
+                href="/interactive"
+                title="Interactive Learning"
+                description="Experience comprehensive learning with all features combined - phonics, comprehension, visualization, and audio in one seamless experience"
+                icon={FaGraduationCap}
+                isDisabled={isOverLimit}
+                onDisabledClick={handleDisabledClick}
+              />
+            </Box>
           </VStack>
 
           {/* About Our Application Section */}
