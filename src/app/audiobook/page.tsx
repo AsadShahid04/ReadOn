@@ -19,6 +19,11 @@ const Audiobook = () => {
   const toast = useToast();
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const generateAudio = useCallback(async () => {
     setIsLoading(true);
@@ -238,6 +243,10 @@ const Audiobook = () => {
         </Box>
       </Box>
     );
+  }
+
+  if (!mounted) {
+    return null;
   }
 
   return (

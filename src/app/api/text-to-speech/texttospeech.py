@@ -10,9 +10,17 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 def generate_speech(text):
     try:
-        # Create an 'audio_files' directory if it doesn't exist
-        audio_dir = Path(__file__).parent / "audio_files"
-        audio_dir.mkdir(exist_ok=True)
+        # Check if we're in production (Vercel) or development
+        is_production = os.environ.get('VERCEL_ENV') == 'production'
+        project_root = Path(__file__).parent.parent.parent.parent.parent
+        
+        if is_production:
+            # In production, use /tmp directory for temporary file storage
+            audio_dir = Path('/tmp')
+        else:
+            # In development, use public directory
+            audio_dir = project_root / "public" / "audio_files"
+            audio_dir.mkdir(parents=True, exist_ok=True)
         
         # Create a unique filename using timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

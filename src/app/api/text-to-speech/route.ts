@@ -8,29 +8,26 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export async function POST(req: Request): Promise<Response> {
   try {
     const { text } = await req.json();
-    
-    // Path to Python script
-    const scriptPath = path.join(process.cwd(), 'src', 'app', 'audiobook', 'texttospeech.py');
+    const scriptPath = path.join(process.cwd(), 'src', 'app', 'api', 'text-to-speech', 'texttospeech.py');
     
     return new Promise<Response>((resolve) => {
-      const process = spawn('python', [scriptPath]);
+      const pythonProcess = spawn('python3', [scriptPath]);
       let outputData = '';
       let errorData = '';
 
-      // Send input to Python script
-      process.stdin.write(JSON.stringify({ text }));
-      process.stdin.end();
+      pythonProcess.stdin.write(JSON.stringify({ text }));
+      pythonProcess.stdin.end();
 
-      process.stdout.on('data', (data) => {
+      pythonProcess.stdout.on('data', (data) => {
         outputData += data.toString();
       });
 
-      process.stderr.on('data', (data) => {
+      pythonProcess.stderr.on('data', (data) => {
         errorData += data.toString();
         console.error(`Python Error: ${data}`);
       });
 
-      process.on('close', async (code) => {
+      pythonProcess.on('close', async (code) => {
         if (code !== 0 || errorData.includes('Error')) {
           console.error('Failed to generate speech:', errorData);
           resolve(NextResponse.json({ error: 'Failed to generate speech' }, { status: 500 }));
@@ -38,9 +35,7 @@ export async function POST(req: Request): Promise<Response> {
         }
 
         try {
-          // Wait for file to be fully written
           await sleep(500);
-          
           const audioFilePath = outputData.trim();
           const audioBuffer = await fs.readFile(audioFilePath);
 
@@ -48,8 +43,9 @@ export async function POST(req: Request): Promise<Response> {
             throw new Error('Generated audio file is empty');
           }
 
-          // Clean up old files asynchronously
-          cleanupOldFiles(path.dirname(audioFilePath)).catch(console.error);
+          if (process.env.NODE_ENV === 'development') {
+            cleanupOldFiles().catch(console.error);
+          }
 
           resolve(new NextResponse(audioBuffer, {
             status: 200,
@@ -67,7 +63,7 @@ export async function POST(req: Request): Promise<Response> {
         }
       });
 
-      process.on('error', (error) => {
+      pythonProcess.on('error', (error) => {
         console.error('Failed to start Python process:', error);
         resolve(NextResponse.json({ error: 'Failed to start process' }, { status: 500 }));
       });
@@ -81,15 +77,16 @@ export async function POST(req: Request): Promise<Response> {
   }
 }
 
-async function cleanupOldFiles(dirPath: string) {
+async function cleanupOldFiles() {
   try {
-    const files = await fs.readdir(dirPath);
+    const publicDir = path.join(process.cwd(), 'public', 'audio_files');
+    const files = await fs.readdir(publicDir);
     const filePaths = files
       .filter(file => file.endsWith('.mp3'))
       .map(file => ({
         name: file,
-        path: path.join(dirPath, file),
-        created: fs.stat(path.join(dirPath, file)).then(stat => stat.birthtimeMs)
+        path: path.join(publicDir, file),
+        created: fs.stat(path.join(publicDir, file)).then(stat => stat.birthtimeMs)
       }));
 
     const filesWithDates = await Promise.all(

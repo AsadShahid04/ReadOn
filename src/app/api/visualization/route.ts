@@ -7,10 +7,10 @@ export async function POST(request: Request): Promise<Response> {
     const { text } = await request.json();
     
     // Path to Python script
-    const scriptPath = path.join(process.cwd(), 'src', 'app', 'visualization', 'generate_images.py');
+    const scriptPath = path.join(process.cwd(), 'src', 'app', 'api', 'visualization', 'generate_images.py');
     
     return new Promise((resolve, reject) => {
-      const process = spawn('python', [scriptPath]);
+      const process = spawn('python3', [scriptPath]);
       let outputData = '';
       let errorData = '';
 
