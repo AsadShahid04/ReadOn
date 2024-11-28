@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from pathlib import Path
 from openai import OpenAI
 from datetime import datetime
@@ -34,15 +35,14 @@ def generate_speech(text):
         return None
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Please provide the text to convert to speech.", file=sys.stderr)
-        sys.exit(1)
-
-    input_text = sys.argv[1]
-    result = generate_speech(input_text)
-    if result:
-        print(result)  # Print the file path to stdout
-        print(f"Audio file created at: {result}", file=sys.stderr)  # Log to stderr for debugging
-    else:
-        print("Failed to generate speech.", file=sys.stderr)
+    try:
+        input_data = json.loads(sys.stdin.read())
+        text = input_data['text']
+        result = generate_speech(text)
+        if result:
+            print(result)
+        else:
+            sys.exit(1)
+    except Exception as e:
+        print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(1)
