@@ -49,6 +49,10 @@ const WordVisualization = () => {
         throw new Error(data.error)
       }
 
+      if (!data.results || data.results.length === 0) {
+        throw new Error('No images were generated')
+      }
+
       visualizationCache.put(text, data)
       setResults(data.results)
     } catch (error) {
