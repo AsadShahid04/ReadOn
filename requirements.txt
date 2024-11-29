@@ -4,8 +4,8 @@ google-generativeai>=0.3.0
 requests>=2.32.0
 python-dotenv==1.0.1
 
-# Only include what's necessary from Pillow
-Pillow-SIMD>=10.3.0  # More efficient version of Pillow
+# Image Processing
+Pillow>=10.3.0  # Using standard Pillow instead of Pillow-SIMD
 
 # Remove unnecessary dependencies
 # pathlib is included in Python standard library, so we can remove it 
