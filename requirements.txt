@@ -1,29 +1,11 @@
-# OpenAI API
+# Core dependencies
 openai==1.14.0
-
-# Google Generative AI
 google-generativeai>=0.3.0
-
-# HTTP Requests - Updated for security fix
 requests>=2.32.0
-
-# Environment Variables
 python-dotenv==1.0.1
 
-# Image Processing - Updated for security fix
-Pillow>=10.3.0
+# Only include what's necessary from Pillow
+Pillow-SIMD>=10.3.0  # More efficient version of Pillow
 
-# File Handling
-pathlib==1.0.1
-
-# Base64 Encoding (included in Python standard library)
-
-# JSON Processing (included in Python standard library)
-
-# System Operations (included in Python standard library)
-
-# Regular Expressions (included in Python standard library)
-
-# Type Hints (included in Python standard library)
-
-# IO Operations (included in Python standard library) 
+# Remove unnecessary dependencies
+# pathlib is included in Python standard library, so we can remove it 
