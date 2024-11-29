@@ -5,6 +5,14 @@ import { useEffect, useState, useRef } from 'react'
 import { useText } from '../TextContext'
 import Link from 'next/link'
 import { FaHome, FaVolumeUp } from 'react-icons/fa'
+import { 
+  getCachedVisualization, 
+  getCachedQuestions, 
+  visualizationCache, 
+  comprehensionCache, 
+  getCachedPhonetics, 
+  phoneticsCache 
+} from '../../utils/caches';
 
 interface VisualizationResult {
   segment: string;
@@ -51,31 +59,47 @@ const WordVisualization = () => {
   }, [inputText]);
 
   const generateImages = async (text: string) => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
+      const cachedResult = getCachedVisualization(text);
+      if (cachedResult) {
+        console.log('Using cached visualization results');
+        setResults(cachedResult.results);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/visualization', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ text }),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (response.ok) {
-        setResults(data.results)
+        visualizationCache.put(text, data);
+        setResults(data.results);
       } else {
-        throw new Error(data.error || 'An error occurred')
+        throw new Error(data.error || 'An error occurred');
       }
     } catch (error) {
-      console.error('Error generating images:', error)
-      setError(error instanceof Error ? error.message : 'An unknown error occurred')
+      console.error('Error generating images:', error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const fetchQuestions = async (text: string) => {
     try {
+      const cachedQuestions = getCachedQuestions(text);
+      if (cachedQuestions) {
+        console.log('Using cached questions');
+        setQuestions(cachedQuestions.questions);
+        return;
+      }
+
       const response = await fetch("/api/generateQuestions", {
         method: "POST",
         headers: {
@@ -85,6 +109,7 @@ const WordVisualization = () => {
       });
       const data = await response.json();
       if (data.questions) {
+        comprehensionCache.put(text, data);
         setQuestions(data.questions);
       }
     } catch (error) {
@@ -94,6 +119,14 @@ const WordVisualization = () => {
 
   const handleWordHover = async (word: string) => {
     try {
+      const cachedData = getCachedPhonetics(word);
+      if (cachedData && cachedData[0]) {
+        console.log('Using cached phonetics data');
+        setHoveredWord(word);
+        setWordData(cachedData[0]);
+        return;
+      }
+
       const response = await fetch("/api/phonetics", {
         method: "POST",
         headers: {
@@ -103,6 +136,7 @@ const WordVisualization = () => {
       });
       const data = await response.json();
       if (data && data[0]) {
+        phoneticsCache.put(word, data);
         setHoveredWord(word);
         setWordData(data[0]);
       } else {

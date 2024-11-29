@@ -7,15 +7,11 @@ import { useEffect, useState, useRef } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { FaHome } from 'react-icons/fa';
+import { getCachedQuestions, comprehensionCache, type Question } from '../../utils/caches';
 
 interface Choice {
   text: string;
   isCorrect: boolean;
-}
-
-interface Question {
-  question: string;
-  choices: Choice[];
 }
 
 const ReadingComprehension = () => {
@@ -40,40 +36,46 @@ const ReadingComprehension = () => {
   ];
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      if (inputText) {
-        setLoading(true);
-        try {
-          const response = await fetch("/api/generateQuestions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ text: inputText }),
-          });
-
-          const data = await response.json();
-          console.log("API Response:", data);
-
-          if (data.questions && Array.isArray(data.questions)) {
-            setQuestions(data.questions);
-          } else if (data.error) {
-            console.error("API Error:", data.error);
-            toast.error(`Failed to generate questions: ${data.error}`);
-          } else {
-            console.error("Unexpected response format:", data);
-            toast.error("Unexpected response from the server. Please try again.");
-          }
-        } catch (error) {
-          console.error("Error fetching questions:", error);
-          toast.error("An error occurred while generating questions.");
-        } finally {
+    const fetchQuestions = async (text: string) => {
+      setLoading(true);
+      try {
+        // Check cache first
+        const cachedQuestions = getCachedQuestions(text);
+        if (cachedQuestions) {
+          console.log('Using cached questions');
+          setQuestions(cachedQuestions.questions);
           setLoading(false);
+          return;
         }
+
+        const response = await fetch("/api/generateQuestions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text }),
+        });
+        const data = await response.json();
+        if (data.questions) {
+          comprehensionCache.put(text, { questions: data.questions });
+          setQuestions(data.questions);
+        }
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        toast.error("Failed to generate questions. Please try again.", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchQuestions();
+    fetchQuestions(inputText);
   }, [inputText]);
 
   const handleAnswerSubmit = (questionIndex: number, choiceIndex: number, isCorrect: boolean) => {
@@ -276,7 +278,7 @@ const ReadingComprehension = () => {
         position="top-right"
         autoClose={1500}
         hideProgressBar={false}
-        newestOnTop
+        newestOnTop={false}
         closeOnClick
         rtl={false}
         pauseOnFocusLoss

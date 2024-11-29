@@ -5,12 +5,8 @@ import { useEffect, useState } from 'react'
 import { useText } from '../TextContext'
 import Link from 'next/link'
 import { FaHome } from 'react-icons/fa'
-
-interface VisualizationResult {
-  segment: string;
-  image_data: string;
-  segment_type: 'paragraph' | 'sentence';
-}
+import { getCachedVisualization, visualizationCache } from '../../utils/caches'
+import type { VisualizationResult } from '../../utils/caches'
 
 const WordVisualization = () => {
   const { inputText } = useText()
@@ -28,6 +24,14 @@ const WordVisualization = () => {
     setLoading(true)
     setError(null)
     try {
+      const cachedResult = getCachedVisualization(text)
+      if (cachedResult) {
+        console.log('Using cached visualization results')
+        setResults(cachedResult.results)
+        setLoading(false)
+        return
+      }
+
       const response = await fetch('/api/visualization', {
         method: 'POST',
         headers: {
@@ -36,7 +40,8 @@ const WordVisualization = () => {
         body: JSON.stringify({ text }),
       })
       const data = await response.json()
-      if (response.ok) {
+      if (response.ok && data.results) {
+        visualizationCache.put(text, data)
         setResults(data.results)
       } else {
         throw new Error(data.error || 'An error occurred')

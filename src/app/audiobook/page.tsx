@@ -6,6 +6,7 @@ import { useText } from "../TextContext";
 import Link from "next/link";
 import { FaHome, FaBackward, FaForward, FaPlay, FaPause } from 'react-icons/fa';
 import { Slider, SliderTrack, SliderFilledTrack, SliderThumb, HStack } from "@chakra-ui/react";
+import { getCachedAudio, audiobookCache } from '../../utils/caches';
 
 const Audiobook = () => {
   const { inputText } = useText();
@@ -20,6 +21,7 @@ const Audiobook = () => {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [audioData, setAudioData] = useState<ArrayBuffer | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -28,6 +30,23 @@ const Audiobook = () => {
   const generateAudio = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Check cache first
+      const cachedAudioData = getCachedAudio(inputText);
+      if (cachedAudioData) {
+        console.log('Using cached audio');
+        setAudioData(cachedAudioData);
+        const url = URL.createObjectURL(new Blob([cachedAudioData], { type: 'audio/mpeg' }));
+        setAudioUrl(url);
+        if (audioRef.current) {
+          audioRef.current.src = url;
+          audioRef.current.onloadeddata = () => {
+            setAudioReady(true);
+          };
+        }
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch("/api/text-to-speech", {
         method: "POST",
         headers: {
@@ -41,8 +60,11 @@ const Audiobook = () => {
         throw new Error(errorData.error || "Failed to generate audio");
       }
 
-      const audioBlob = await response.blob();
-      const url = URL.createObjectURL(audioBlob);
+      const audioBuffer = await response.arrayBuffer();
+      audiobookCache.put(inputText, audioBuffer);
+      setAudioData(audioBuffer);
+      
+      const url = URL.createObjectURL(new Blob([audioBuffer], { type: 'audio/mpeg' }));
       setAudioUrl(url);
       
       if (audioRef.current) {

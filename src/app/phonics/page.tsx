@@ -6,16 +6,8 @@ import { FaVolumeUp, FaArrowLeft, FaArrowRight, FaHome } from 'react-icons/fa'
 import Link from 'next/link'
 import { useText } from '../TextContext'
 import { motion, AnimatePresence } from 'framer-motion'
-import LRUCache from '../../utils/LRUCache'
-
-interface WordData {
-  word: string;
-  phonetic: string;
-  audio_url: string | null;
-  definition: string;
-}
-
-const wordCache = new LRUCache<string, WordData[]>(200);
+import { getCachedPhonetics, phoneticsCache } from '../../utils/caches'
+import type { WordData } from '../../utils/caches'
 
 const Phonics = () => {
   const { inputText } = useText()
@@ -26,44 +18,51 @@ const Phonics = () => {
   const [direction, setDirection] = useState(0);
   const [dataSource, setDataSource] = useState<'cache' | 'api' | null>(null);
 
-  const fetchWordData = useMemo(() => async () => {
-    if (inputText) {
-      const cachedData = wordCache.get(inputText);
+  const processText = async () => {
+    if (!inputText) return;
+    setLoading(true);
+
+    try {
+      // Check cache first
+      const cachedData = getCachedPhonetics(inputText);
       if (cachedData) {
-        console.log('Data retrieved from cache! 🚀');
+        console.log('Using cached phonetics data');
         setDataSource('cache');
         setWords(cachedData);
+        setLoading(false);
         return;
       }
 
-      setLoading(true);
-      try {
-        console.log('Fetching from API... ⏳');
-        setDataSource('api');
-        const response = await fetch('/api/phonetics', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text: inputText }),
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch word data');
-        }
-        const data = await response.json();
-        wordCache.put(inputText, data);
-        setWords(data);
-      } catch (error) {
-        console.error('Error fetching word data:', error);
-      } finally {
-        setLoading(false);
+      // If not in cache, fetch from API
+      const response = await fetch('/api/phonetics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch word data');
       }
+
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        console.log('Fetched from API');
+        setDataSource('api');
+        phoneticsCache.put(inputText, data);
+        setWords(data);
+      }
+    } catch (error) {
+      console.error('Error processing text:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [inputText]);
+  };
 
   useEffect(() => {
-    fetchWordData();
-  }, [fetchWordData]);
+    processText();
+  }, [inputText]);
 
   const playAudio = async () => {
     const currentWord = words[currentIndex]
@@ -88,8 +87,8 @@ const Phonics = () => {
   };
 
   useEffect(() => {
-    console.log('Current cache size:', wordCache.getSize());
-    wordCache.debug();
+    console.log('Current cache size:', phoneticsCache.getSize());
+    phoneticsCache.debug();
   }, [words]);
 
   if (loading) {

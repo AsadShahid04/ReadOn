@@ -12,14 +12,14 @@ export async function POST(req: Request): Promise<Response> {
     
     return new Promise<Response>((resolve) => {
       const pythonProcess = spawn('python3', [scriptPath]);
-      let outputData = '';
+      let outputData = Buffer.from('');
       let errorData = '';
 
       pythonProcess.stdin.write(JSON.stringify({ text }));
       pythonProcess.stdin.end();
 
       pythonProcess.stdout.on('data', (data) => {
-        outputData += data.toString();
+        outputData = Buffer.concat([outputData, data]);
       });
 
       pythonProcess.stderr.on('data', (data) => {
@@ -35,23 +35,15 @@ export async function POST(req: Request): Promise<Response> {
         }
 
         try {
-          await sleep(500);
-          const audioFilePath = outputData.trim();
-          const audioBuffer = await fs.readFile(audioFilePath);
-
-          if (audioBuffer.length === 0) {
-            throw new Error('Generated audio file is empty');
+          if (outputData.length === 0) {
+            throw new Error('Generated audio data is empty');
           }
 
-          if (process.env.NODE_ENV === 'development') {
-            cleanupOldFiles().catch(console.error);
-          }
-
-          resolve(new NextResponse(audioBuffer, {
+          resolve(new NextResponse(outputData, {
             status: 200,
             headers: {
               'Content-Type': 'audio/mpeg',
-              'Content-Length': audioBuffer.length.toString(),
+              'Content-Length': outputData.length.toString(),
             },
           }));
         } catch (error) {
@@ -74,40 +66,5 @@ export async function POST(req: Request): Promise<Response> {
       error: 'Failed to process request',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
-  }
-}
-
-async function cleanupOldFiles() {
-  try {
-    const publicDir = path.join(process.cwd(), 'public', 'audio_files');
-    const files = await fs.readdir(publicDir);
-    const filePaths = files
-      .filter(file => file.endsWith('.mp3'))
-      .map(file => ({
-        name: file,
-        path: path.join(publicDir, file),
-        created: fs.stat(path.join(publicDir, file)).then(stat => stat.birthtimeMs)
-      }));
-
-    const filesWithDates = await Promise.all(
-      filePaths.map(async file => ({
-        ...file,
-        created: await file.created
-      }))
-    );
-
-    const sortedFiles = filesWithDates.sort((a, b) => b.created - a.created);
-    const filesToDelete = sortedFiles.slice(10);
-
-    for (const file of filesToDelete) {
-      try {
-        await fs.unlink(file.path);
-        console.log(`Cleaned up old audio file: ${file.name}`);
-      } catch (error) {
-        console.warn(`Failed to delete old file ${file.name}:`, error);
-      }
-    }
-  } catch (error) {
-    console.error('Error cleaning up old files:', error);
   }
 }

@@ -110,7 +110,6 @@ def get_word_data(word: str, api_key: str) -> Dict:
             return {
                 "word": word,
                 "phonetic": phonetic,
-                "audio_file": audio_file,
                 "audio_url": get_audio_url(audio_file) if audio_file else None,
                 "definition": definition
             }

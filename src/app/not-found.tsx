@@ -85,7 +85,7 @@ export default function NotFound() {
               color="gray.600"
               textAlign="center"
             >
-              This page does not exist (Error 404).
+              This page does not exist.
             </Text>
           </VStack>
         </VStack>
