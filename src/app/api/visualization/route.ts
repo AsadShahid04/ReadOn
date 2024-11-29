@@ -1,52 +1,78 @@
 import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
-import path from 'path';
+import OpenAI from 'openai';
 
-export async function POST(request: Request): Promise<Response> {
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+function splitIntoParagraphs(text: string): string[] {
+  return text.split(/\n\n/).filter(p => p.trim());
+}
+
+function splitIntoSentences(text: string): string[] {
+  return text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
+}
+
+export async function POST(request: Request) {
   try {
     const { text } = await request.json();
     
-    // Path to Python script
-    const scriptPath = path.join(process.cwd(), 'src', 'app', 'api', 'visualization', 'generate_images.py');
+    // Split text into segments
+    let segments = splitIntoParagraphs(text);
+    let segmentType = 'paragraph';
     
-    return new Promise((resolve, reject) => {
-      const process = spawn('python3', [scriptPath]);
-      let outputData = '';
-      let errorData = '';
+    // If only one paragraph, split into sentences
+    if (segments.length <= 1) {
+      segments = splitIntoSentences(text);
+      segmentType = 'sentence';
+    }
+    
+    // Remove duplicates and empty segments
+    segments = Array.from(new Set(segments.filter(s => s.trim())));
+    
+    const results = [];
+    
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      
+      // Create prompt based on context
+      const prompt = i === 0 
+        ? `Starting ${segmentType}: ${segment}
+           Generate a detailed, realistic image that best represents this ${segmentType}.
+           Create a cohesive visual that captures the main elements and mood.
+           Do not include any text in the image.`
+        : `Context: ${segments.slice(0, i).join(' ')}
+           Current ${segmentType}: ${segment}
+           Generate an image that continues the story, focusing on the current ${segmentType}
+           while maintaining visual consistency with the previous context.
+           Create a cohesive scene that flows naturally from the previous segments.
+           Do not include any text in the image.`;
 
-      // Send input to Python script
-      process.stdin.write(JSON.stringify({ text }));
-      process.stdin.end();
-
-      process.stdout.on('data', (data) => {
-        outputData += data.toString();
+      const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
       });
 
-      process.stderr.on('data', (data) => {
-        errorData += data.toString();
-        console.error(`Python Error: ${data}`);
-      });
+      const imageUrl = response.data[0].url;
+      if (!imageUrl) continue;
 
-      process.on('close', (code) => {
-        if (code !== 0) {
-          console.error(`Process exited with code ${code}`);
-          resolve(NextResponse.json(
-            { error: 'Failed to generate images', details: errorData },
-            { status: 500 }
-          ));
-        } else {
-          try {
-            const results = JSON.parse(outputData);
-            resolve(NextResponse.json(results));
-          } catch (e) {
-            resolve(NextResponse.json(
-              { error: 'Failed to parse Python output' },
-              { status: 500 }
-            ));
-          }
-        }
+      // Fetch the image and convert to base64
+      const imageResponse = await fetch(imageUrl);
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const base64Image = Buffer.from(imageBuffer).toString('base64');
+
+      results.push({
+        segment,
+        image_data: `data:image/png;base64,${base64Image}`,
+        segment_type: segmentType
       });
-    });
+    }
+
+    return NextResponse.json({ results });
+
   } catch (error) {
     console.error('Error in visualization route:', error);
     return NextResponse.json(

@@ -2,46 +2,42 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(request: Request) {
-  const { text } = await request.json();
-
-  const questionsCount = Math.min(
-    Math.max(1, Math.ceil(text.length / 200)),
-    15
-  );
-
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const prompt = `Generate exactly ${questionsCount} multiple-choice comprehension questions for the following text: ${text}. 
-  The questions should cover different aspects of the text and vary in difficulty.
-  Format the output as a valid JSON object with this structure:
-  {
-    "questions": [
-      {
-        "question": "What is the main idea of the text?",
-        "choices": [
-          { "text": "Choice A", "isCorrect": false },
-          { "text": "Choice B", "isCorrect": true },
-          { "text": "Choice C", "isCorrect": false },
-          { "text": "Choice D", "isCorrect": false }
-        ]
-      }
-    ]
-  }
-  Important: Return only the JSON object, without any markdown formatting or backticks.`;
-
   try {
+    const { text } = await request.json();
+
+    const questionsCount = Math.min(
+      Math.max(1, Math.ceil(text.length / 200)),
+      15
+    );
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt = `Generate exactly ${questionsCount} multiple-choice comprehension questions for the following text: ${text}. 
+    The questions should cover different aspects of the text and vary in difficulty.
+    Format the output as a valid JSON object with this structure:
+    {
+      "questions": [
+        {
+          "question": "What is the main idea of the text?",
+          "choices": [
+            { "text": "Choice A", "isCorrect": false },
+            { "text": "Choice B", "isCorrect": true },
+            { "text": "Choice C", "isCorrect": false },
+            { "text": "Choice D", "isCorrect": false }
+          ]
+        }
+      ]
+    }
+    Important: Return only the JSON object, without any markdown formatting or backticks.`;
+
     const result = await model.generateContent(prompt);
     const response = result.response.text();
     
-    console.log('Raw Gemini Response:', response);
-
     const cleanedResponse = response
       .replace(/```json\s*/g, '')
       .replace(/```/g, '')
       .trim();
-
-    console.log('Cleaned Response:', cleanedResponse);
 
     try {
       const questions = JSON.parse(cleanedResponse);
@@ -57,17 +53,17 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(questions);
-    } catch (error: unknown) {
-      console.error('JSON Parse Error:', error);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError);
       return NextResponse.json(
         { 
           error: 'Failed to parse questions', 
-          details: error instanceof Error ? error.message : 'Unknown parsing error'
+          details: parseError instanceof Error ? parseError.message : 'Unknown parsing error'
         },
         { status: 500 }
       );
     }
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Error generating questions:', error);
     return NextResponse.json(
       { 

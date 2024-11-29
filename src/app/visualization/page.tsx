@@ -39,13 +39,18 @@ const WordVisualization = () => {
         },
         body: JSON.stringify({ text }),
       })
-      const data = await response.json()
-      if (response.ok && data.results) {
-        visualizationCache.put(text, data)
-        setResults(data.results)
-      } else {
-        throw new Error(data.error || 'An error occurred')
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+
+      const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      visualizationCache.put(text, data)
+      setResults(data.results)
     } catch (error) {
       console.error('Error generating images:', error)
       setError(error instanceof Error ? error.message : 'An unknown error occurred')

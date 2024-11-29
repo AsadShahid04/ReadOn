@@ -4,27 +4,12 @@
     {
       "src": "package.json",
       "use": "@vercel/next"
-    },
-    {
-      "src": "src/app/api/**/*.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "10mb",
-        "runtime": "python3.9"
-      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "env": {
-    "PYTHON_VERSION": "3.9"
-  }
+  ]
 } 

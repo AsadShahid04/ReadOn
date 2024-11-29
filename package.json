@@ -15,8 +15,6 @@
     "@emotion/styled": "^11.13.5",
     "@google/generative-ai": "^0.21.0",
     "@tsparticles/react": "^3.0.0",
-    "axios": "^1.7.7",
-    "cheerio": "^1.0.0",
     "framer-motion": "^11.12.0",
     "next": "^14.2.10",
     "openai": "^4.72.0",
