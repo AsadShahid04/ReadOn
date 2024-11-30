@@ -5,6 +5,12 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+interface VisualizationResult {
+  segment: string;
+  image_data: string;
+  segment_type: 'paragraph' | 'sentence';
+}
+
 function splitIntoParagraphs(text: string): string[] {
   return text.split(/\n\n/).filter(p => p.trim());
 }
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
     
     // Split text into segments
     let segments = splitIntoParagraphs(text);
-    let segmentType = 'paragraph';
+    let segmentType: 'paragraph' | 'sentence' = 'paragraph';
     
     if (segments.length <= 1) {
       segments = splitIntoSentences(text);
@@ -44,7 +50,7 @@ export async function POST(request: Request) {
     // Limit the number of segments to prevent timeout
     segments = Array.from(new Set(segments.filter(s => s.trim()))).slice(0, 3);
     
-    const results = [];
+    const results: (VisualizationResult | undefined)[] = new Array(segments.length);
     
     // Process segments concurrently with Promise.all
     await Promise.all(segments.map(async (segment, i) => {
@@ -88,7 +94,7 @@ export async function POST(request: Request) {
     }));
 
     // Filter out any null results from failed generations
-    const validResults = results.filter(result => result);
+    const validResults = results.filter((result): result is VisualizationResult => result !== undefined);
 
     if (validResults.length === 0) {
       throw new Error('Failed to generate any valid images');
